@@ -801,7 +801,7 @@
 	"variable": [
 		{
 			"key": "BASE_URL",
-			"value": "http://localhost:8080/api/v1",
+			"value": "https://apitol.topopticallab.co.id/api/v1",
 			"type": "string"
 		},
 		{
@@ -811,7 +811,7 @@
 		},
 		{
 			"key": "PUBLIC_API_KEY",
-			"value": "d62de94c44d784372d258f5f7f044ca64aaa819911a223c546cb05e663eaeb84",
+			"value": "",
 			"type": "string"
 		}
 	]
