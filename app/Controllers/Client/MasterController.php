@@ -99,11 +99,10 @@ class MasterController extends BaseController
         return api_response($data, 'Data Lensa fetched successfully');
     }
 
-
     public function getSpheris()
     {
         
-        $this->db = \Config\Database::connect();
+        $this->db = \Config\Database::connect('db_tol');
         // Get data from model
         $sql = "SELECT DISTINCT TRIM(nama_jpower) AS kode_spheris
                 FROM db_tol.mst_jpower
@@ -138,7 +137,7 @@ class MasterController extends BaseController
             return api_error('Kode Cylinder not found, select kode spheris before.', 404);
         }
         
-        $this->db = \Config\Database::connect();
+        $this->db = \Config\Database::connect('db_tol');
         // Get data from model
         $sql = "SELECT kode_jcylinder AS kode_cylinder 
             FROM 
@@ -157,7 +156,7 @@ class MasterController extends BaseController
     public function getCylinderWithPaging()
     {
         // 1. Inisialisasi
-        $db = \Config\Database::connect();
+        $db = \Config\Database::connect('db_tol');
         $pager = \Config\Services::pager();
 
         // 2. Ambil halaman saat ini
@@ -220,7 +219,7 @@ class MasterController extends BaseController
 
     public function getAxis()
     {
-        $db  = \Config\Database::connect();
+        $db  = \Config\Database::connect('db_tol');
         $sql = $db->query('SELECT DISTINCT nama_jpower as kode_axis
                     FROM db_tol.mst_jpower
                     WHERE jenis_jpower="A" AND aktif=1
@@ -234,7 +233,7 @@ class MasterController extends BaseController
 
     public function getAdditional()
     {
-        $db  = \Config\Database::connect();
+        $db  = \Config\Database::connect('db_tol');
         $sql = $db->query('SELECT DISTINCT TRIM(nama_jpower) AS kode_additional
                 FROM db_tol.mst_jpower 
                 WHERE jenis_jpower="D" 
@@ -247,10 +246,9 @@ class MasterController extends BaseController
         return api_response($getAdditional, 'Data Additional fetched successfully');
     }
 
-
     public function getModel()
     {
-        $db  = \Config\Database::connect();
+        $db  = \Config\Database::connect('db_tol');
         $sql = $db->query('SELECT * FROM db_tol.mst_model');
 
         $getModel = $sql->getResult();
@@ -275,7 +273,7 @@ class MasterController extends BaseController
 
     public function getJasa()
     {
-        $db  = \Config\Database::connect();
+        $db  = \Config\Database::connect('db_tol');
         $sql = $db->query('SELECT kode_jasa, nama_jasa 
                             FROM db_tol.mst_jjasa 
                             WHERE kode_jasa<>"" AND aktif=1 ');
@@ -295,7 +293,7 @@ class MasterController extends BaseController
         }
         $kodebase = $log_base;
 
-        return api_response($kodebase, 'Base fetched successfully');
+        return api_response($kodebase, 'Data Base fetched successfully');
     }
 
     public function getPrisma()
@@ -308,7 +306,7 @@ class MasterController extends BaseController
         }
         $kodeprisma = $log_prisma;
 
-        return api_response($kodeprisma, 'Base fetched successfully');
+        return api_response($kodeprisma, 'Data Prisma fetched successfully');
     }
 
 }

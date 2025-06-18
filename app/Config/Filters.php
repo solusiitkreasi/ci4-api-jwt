@@ -38,6 +38,7 @@ class Filters extends BaseFilters
         'apiKeyAuth'=> \App\Filters\ApiKeyAuthFilter::class,
         // 'role'      => \App\Filters\RoleFilter::class, // Tidak digunakan sudah ada permission
         'permission'    => \App\Filters\PermissionFilter::class, // <-- Tambahkan ini
+        'dbCheck' => \App\Filters\DatabaseConnectionFilter::class, 
     ];
 
     /**
@@ -73,6 +74,7 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
+            'dbCheck',
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
@@ -81,6 +83,7 @@ class Filters extends BaseFilters
             'toolbar',
             // 'honeypot',
             // 'secureheaders',
+            // 'throttler',
         ],
     ];
 

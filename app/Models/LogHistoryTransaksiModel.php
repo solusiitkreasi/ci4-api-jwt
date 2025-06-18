@@ -8,10 +8,11 @@ class LogHistoryTransaksiModel extends Model
 {
     protected $table            = 'transaction_history_log';
     protected $primaryKey       = 'id';
-    protected $useAutoIncrement = true;
+    protected $useAutoIncrement = false;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $allowedFields    = [
+        'id',
         'transaction_id',
         'user_id', // User yang melakukan aksi (bisa admin, client, atau sistem/null)
         'action',

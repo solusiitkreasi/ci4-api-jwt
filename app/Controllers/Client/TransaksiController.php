@@ -79,14 +79,25 @@ class TransaksiController extends BaseController
             return api_error('Detail Transaksi not found', 404);
         }
 
-        $jasa   = $this->transaksiJasaModel->where('id',$id)->findAll();
+        $getjasa   = $this->transaksiJasaModel->where('id',$id)->findAll();
 
+        foreach ($getjasa as &$jasa) {
+            
+            $jasa_id = $jasa['jasa_id'];
+            
+            $db     = \Config\Database::connect('db_tol');
+            $sql    = $db->query('SELECT kode_jasa, nama_jasa FROM db_tol.mst_jjasa 
+                                WHERE kode_jasa="'.$jasa_id.'" AND aktif=1');
+            $getJasaNama = $sql->getRow();
+            
+            $jasa['nama_jasa'] = $getJasaNama->nama_jasa;
+        }
+        
         $data['transaksi']  = $transaksi;
-        $data['jasa']       = $jasa;
+        $data['jasa']       = $getjasa;
 
         return api_response($data, 'Detail Transaksi fetched successfully');
     }
-
 
     public function createTrn()
     {
@@ -190,42 +201,7 @@ class TransaksiController extends BaseController
         $db->transStart(); // Mulai transaksi database
 
         try {
-            $totalLensa = 0;
-            if($data_lensa->r_lensa){
-                $totalLensa +=1; 
-            }
-            if($data_lensa->l_lensa){
-                $totalLensa +=1;
-            }
-
-            #total pdf
-            $totalPdf = 0;
-            if($data_lensa->r_pdf){
-                $totalPdf +=$data_lensa->r_pdf; 
-            }
-            if($data_lensa->l_pdf){
-                $totalPdf +=$data_lensa->l_pdf;
-            }
-
-            # get nilai koridor
-            $koridor = "";
-            if ($data_lensa->seg_height)
-            {
-                if($data_lensa->seg_height <= "18")
-                {
-                    $koridor = "SHORT";
-                }else{
-                    $koridor = "LONG";
-                }
-            }
-
-
-            #get nilai mbs
-            if ($data_lensa->effectif_diameter > 0 & $data_lensa->lens_size > 0 & $data_lensa->bridge_size > 0  & $totalPdf > 0){
-                $mbs = ROUND($data_lensa->effectif_diameter+$data_lensa->lens_size+$data_lensa->bridge_size+2-$totalPdf);
-            } else {
-                $mbs = '0';
-            }
+            
             
 
             // ✅ GENERATE UUID untuk ID Transaksi
@@ -244,84 +220,146 @@ class TransaksiController extends BaseController
                 "customer_id"       => $user->kode_customer, 
                 "nama_customer"     => $data_lensa->nama_customer,
                 "hanya_jasa"        => $data_lensa->hanya_jasa,
-                "jenis_lensa"       => $data_lensa->jenis_lensa, // Dari data group lensa
             ];
 
-            // Lensa Kanan Cek
-            if($data_lensa->r_lensa)
+            $totalLensa = 0;
+            $totalPdf   = 0;
+            $totalPdn   = 0;
+            $koridor    = "";
+            // Cek If Hanya Jasa
+            if($data_lensa->hanya_jasa == '0')
             {
-                $lensaR = [
+                // Pengecekan Data
 
-                    "r_lensa"           => $data_lensa->r_lensa, // Lensa Kanan
-                    "r_spheris"         => $data_lensa->r_spheris,
-                    "r_cylinder"        => $data_lensa->r_cylinder,
-                    "r_bcurve"          => $data_lensa->r_bcurve,
-                    "r_axis"            => $data_lensa->r_axis,
-                    "r_additional"      => $data_lensa->r_additional,
-                    "r_pd_far"          => $data_lensa->r_pd_far,
-                    "r_pd_near"         => $data_lensa->r_pd_near,
-                    "r_prisma"          => $data_lensa->r_prisma,
-                    "r_base"            => $data_lensa->r_base,
-                    "r_prisma2"         => $data_lensa->r_prisma2,
-                    "r_base2"           => $data_lensa->r_base2,
-                    "r_qty"             => "1",
-                    "r_base_curve"      => $data_lensa->r_base_curve,
-                    "r_edge_thickness"  => $data_lensa->r_edge_thickness,
-                    "r_center_thickness"=> $data_lensa->r_center_thickness,
+                    # Total Lensa
+                    if($data_lensa->r_lensa){
+                        $totalLensa +=1; 
+                    }
+                    if($data_lensa->l_lensa){
+                        $totalLensa +=1;
+                    }
+
+                    #total pdf
+                    if($data_lensa->r_pdf){
+                        $totalPdf +=$data_lensa->r_pdf; 
+                    }
+                    if($data_lensa->l_pdf){
+                        $totalPdf +=$data_lensa->l_pdf;
+                    }
+
+                    #total pdn
+                    if($data_lensa->r_pdn){
+                        $totalPdn +=$data_lensa->r_pdn; 
+                    }
+                    if($data_lensa->l_pdn){
+                        $totalPdn +=$data_lensa->l_pdn;
+                    }
+
+                    # get nilai koridor
+                    if ($data_lensa->seg_height)
+                    {
+                        if($data_lensa->seg_height <= "18")
+                        {
+                            $koridor = "SHORT";
+                        }else{
+                            $koridor = "LONG";
+                        }
+                    }
+
+                    #get nilai mbs
+                    if ($data_lensa->effectif_diameter > 0 & $data_lensa->lens_size > 0 & $data_lensa->bridge_size > 0  & $totalPdf > 0){
+                        $mbs = ROUND($data_lensa->effectif_diameter+$data_lensa->lens_size+$data_lensa->bridge_size+2-$totalPdf);
+                    } else {
+                        $mbs = '0';
+                    }
+
+                // End Pengecekan Data
+
+                // Lensa Kanan Cek
+                if($data_lensa->r_lensa)
+                {
+                    $lensaR = [
+                        "r_lensa"           => $data_lensa->r_lensa,
+                        "r_spheris"         => $data_lensa->r_spheris,
+                        "r_cylinder"        => $data_lensa->r_cylinder,
+                        "r_bcurve"          => $data_lensa->r_bcurve,
+                        "r_axis"            => $data_lensa->r_axis,
+                        "r_additional"      => $data_lensa->r_additional,
+                        "r_pd_far"          => $data_lensa->r_pd_far,
+                        "r_pd_near"         => $data_lensa->r_pd_near,
+                        "r_prisma"          => $data_lensa->r_prisma,
+                        "r_base"            => $data_lensa->r_base,
+                        "r_prisma2"         => $data_lensa->r_prisma2,
+                        "r_base2"           => $data_lensa->r_base2,
+                        "r_qty"             => "1",
+                        "r_base_curve"      => $data_lensa->r_base_curve,
+                        "r_edge_thickness"  => $data_lensa->r_edge_thickness,
+                        "r_center_thickness"=> $data_lensa->r_center_thickness,
+                    ];
+                }else{
+                    $lensaR = [];
+                }
+
+                // Lensa Kiri Cek
+                if($data_lensa->l_lensa)
+                {
+                    $lensaL = [
+                        "l_lensa"           => $data_lensa->l_lensa,
+                        "l_spheris"         => $data_lensa->l_spheris,
+                        "l_cylinder"        => $data_lensa->l_cylinder,
+                        "l_bcurve"          => $data_lensa->l_bcurve,
+                        "l_axis"            => $data_lensa->l_axis,
+                        "l_additional"      => $data_lensa->l_additional,
+                        "l_pd_far"          => $data_lensa->l_pd_far,
+                        "l_pd_near"         => $data_lensa->l_pd_near,
+                        "l_prisma"          => $data_lensa->l_prisma,
+                        "l_base"            => $data_lensa->l_base,
+                        "l_prisma2"         => $data_lensa->l_prisma2,
+                        "l_base2"           => $data_lensa->l_base2,
+                        "l_qty"             => "1",
+                        "l_base_curve"      => $data_lensa->l_base_curve,
+                        "l_edge_thickness"  => $data_lensa->l_edge_thickness,
+                        "l_center_thickness"=> $data_lensa->l_center_thickness,
+                    ];
+                }else{
+                    $lensaL = [];
+                }
+
+            
+                $trnFoot = [
+                    "jenis_lensa"       => $data_lensa->jenis_lensa, // Dari data group lensa
+
+                    "total_pdf"         => $totalPdf,
+                    "total_pdn"         => $totalPdn,
+                    "frame_status"      => $data_lensa->frame_status,
+                    "jenis_frame"       => $data_lensa->jenis_frame,
+                    "model"             => $data_lensa->model,
+                    "note"              => $data_lensa->note,
+                    "effectif_diameter" => $data_lensa->effectif_diameter,
+                    "lens_size"         => $data_lensa->lens_size,
+                    "bridge_size"       => $data_lensa->bridge_size,
+                    "seg_height"        => $data_lensa->seg_height,
+                    "vertical"          => $data_lensa->vertical,
+                    "wa"                => $data_lensa->wa,
+                    "pt"                => $data_lensa->pt,
+                    "bvd"               => $data_lensa->bvd,
+                    "ffv"               => $data_lensa->ffv,
+                    "v_code"            => $data_lensa->v_code,
+                    "rd"                => $data_lensa->rd,
+                    "pe"                => $data_lensa->pe,
+                    "mbs"               => $mbs,
+                    "koridor"           => $koridor,
+                    "max_id"            => $max_id,
+                    "finish_diameter"   => "0", // Null Belum tau, belum ada data
+                    "accessories"       => "0", // Null
                 ];
             }else{
                 $lensaR = [];
-            }
-
-            // Lensa Kiri Cek
-            if($data_lensa->l_lensa)
-            {
-                $lensaL = [
-                    "l_lensa"           => $data_lensa->l_lensa, // Lensa Kanan
-                    "l_spheris"         => $data_lensa->l_spheris,
-                    "l_cylinder"        => $data_lensa->l_cylinder,
-                    "l_bcurve"          => $data_lensa->l_bcurve,
-                    "l_axis"            => $data_lensa->l_axis,
-                    "l_additional"      => $data_lensa->l_additional,
-                    "l_pd_far"          => $data_lensa->l_pd_far,
-                    "l_pd_near"         => $data_lensa->l_pd_near,
-                    "l_prisma"          => $data_lensa->l_prisma,
-                    "l_base"            => $data_lensa->l_base,
-                    "l_prisma2"         => $data_lensa->l_prisma2,
-                    "l_base2"           => $data_lensa->l_base2,
-                    "l_qty"             => "1",
-                    "l_base_curve"      => $data_lensa->l_base_curve,
-                    "l_edge_thickness"  => $data_lensa->l_edge_thickness,
-                    "l_center_thickness"=> $data_lensa->l_center_thickness,
-                ];
-            }else{
                 $lensaL = [];
+                $trnFoot =[];
             }
 
             $trnAkhir = [
-                "total_pdf"         => $totalPdf,
-                "total_pdn"         => 10,
-                "frame_status"      => $data_lensa->frame_status,
-                "jenis_frame"       => $data_lensa->jenis_frame,
-                "model"             => $data_lensa->model,
-                "note"              => $data_lensa->note,
-                "effectif_diameter" => $data_lensa->effectif_diameter,
-                "lens_size"         => $data_lensa->lens_size,
-                "bridge_size"       => $data_lensa->bridge_size,
-                "seg_height"        => $data_lensa->seg_height,
-                "vertical"          => $data_lensa->vertical,
-                "wa"                => $data_lensa->wa,
-                "pt"                => $data_lensa->pt,
-                "bvd"               => $data_lensa->bvd,
-                "ffv"               => $data_lensa->ffv,
-                "v_code"            => $data_lensa->v_code,
-                "rd"                => $data_lensa->rd,
-                "pe"                => $data_lensa->pe,
-                "mbs"               => $mbs,
-                "koridor"           => $koridor,
-                "max_id"            => $max_id,
-                "finish_diameter"   => "0", // Null Belum tau, belum ada data
-                "accessories"       => "0", // Null
                 "spesial_instruksi" => $data_lensa->spesial_instruksi,
                 "keterangan"        => $data_lensa->keterangan,
                 "tgl_id"            => date('Y-m-d'),
@@ -329,40 +367,47 @@ class TransaksiController extends BaseController
             ];
 
             // Merger Data Array
-            $transaksiData = array_merge($trnAwal, $lensaR, $lensaL, $trnAkhir);
+            $transaksiData = array_merge($trnAwal, $lensaR, $lensaL,$trnFoot, $trnAkhir);
 
             // Insert Data
             $transaksiId = $this->transaksiModel->insert($transaksiData);
 
-            tesx($this->transaksiModel->errors());
-
+            // Cek Insert False
             if (!$transaksiId) {
                 $db->transRollback();
                 return api_error('Failed to create transaksi.', 500, $this->transaksiModel->errors());
             }
 
-            // 2. Simpan ke tabel 'jasa_data'
-            $trnJasaData = [];
-            foreach ($data_jasa as $jasa) {
-                $trnJasaData[] = [
-                    // 'id' akan diisi setelah transaksi utama dibuat
-                    'id'                 => $transaksiId,
-                    'jasa_id'            => $jasa->jasa_id,
-                    'qty'                => $totalLensa,
-                ];
+            if($data_jasa){
+                // Simpan ke tabel 'jasa_data'
+                $trnJasaData = [];
+                foreach ($data_jasa as $jasa) {
+                    $trnJasaData[] = [
+                        // 'id' akan diisi setelah transaksi utama dibuat
+                        'id'                 => $transaksiId,
+                        'jasa_id'            => $jasa->jasa_id,
+                        'qty'                => $totalLensa,
+                    ];
+                }
+
+                if (!$this->transaksiJasaModel->insertBatch($trnJasaData)) {
+                    $db->transRollback();
+                    return api_error('Failed to save jasa details.', 500, $this->transaksiJasaModel->errors());
+                }
             }
 
-            if (!$this->transaksiJasaModel->insertBatch($trnJasaData)) {
-                $db->transRollback();
-                return api_error('Failed to save jasa details.', 500, $this->transaksiJasaModel->errors());
+            $logJasa ='';
+            if(!$data_jasa){
+                $logJasa = '(Tidak Ada Jasa)';
             }
-
 
             // Simpan ke tabel 'log_history_transaksi'
+            $IdLog      = Uuid::uuid4()->getHex()->toString();
             $logData = [
+                'id'                => $IdLog,
                 'transaction_id'    => $transaksiId,
                 'user_id'           => $user->id,
-                'action'            => 'Transaction Created',
+                'action'            => 'Transaction Created '.$logJasa,
                 'details'           => json_encode(['items_count' => $totalLensa])
             ];
             $this->logHistoryModel->insert($logData);
