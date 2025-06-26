@@ -15,10 +15,13 @@
 #--------------------------------------------------------------------
 
 # CI_ENVIRONMENT = production
+CI_ENVIRONMENT = development
 
 #--------------------------------------------------------------------
 # APP
 #--------------------------------------------------------------------
+app.baseURL = 'http://localhost:8080' # Sesuaikan dengan URL Anda
+app.forceGlobalSecureRequests = false # Set true jika sudah HTTPS
 
 # app.baseURL = ''
 # If you have trouble with `.`, you could also use `_`.
@@ -26,17 +29,50 @@
 # app.forceGlobalSecureRequests = false
 # app.CSPEnabled = false
 
+
+
 #--------------------------------------------------------------------
 # DATABASE
 #--------------------------------------------------------------------
 
-# database.default.hostname = localhost
-# database.default.database = ci4
-# database.default.username = root
-# database.default.password = root
-# database.default.DBDriver = MySQLi
-# database.default.DBPrefix =
-# database.default.port = 3306
+#default
+#-- Development
+    database.default.hostname = 192.168.10.84
+    database.default.database = tol_api_jwt
+    database.default.username = sa
+    database.default.password = dualcore
+#-- Production
+    # database.default.hostname = 172.19.4.50
+    # database.default.database = db_tol_api
+    # database.default.username = apitol
+    # database.default.password = L03t03y3!?
+
+database.default.DBDriver = MySQLi
+database.default.DBPrefix =
+database.default.port     = 3306
+
+# DB TOL
+database.db_tol.hostname = 192.168.10.84
+database.db_tol.database = db_tol
+database.db_tol.username = sa
+database.db_tol.password = dualcore
+database.db_tol.DBDriver = MySQLi
+database.db_tol.DBPrefix =
+database.db_tol.port     = 3306
+database.db_tol.charset  = utf8mb4
+database.db_tol.DBCollat = utf8mb4_general_ci
+
+# DB HRD ALL 221
+database.db_hrd_all.hostname = 192.168.11.221
+database.db_hrd_all.database = hrd_all
+database.db_hrd_all.username = sa
+database.db_hrd_all.password = dualcore
+database.db_hrd_all.DBDriver = MySQLi
+database.db_hrd_all.DBPrefix =
+database.db_hrd_all.port     = 3306
+database.db_hrd_all.charset  = utf8mb4
+database.db_hrd_all.DBCollat = utf8mb4_general_ci
+
 
 # If you use MySQLi as tests, first update the values of Config\Database::$tests.
 # database.tests.hostname = localhost
@@ -50,10 +86,25 @@
 # database.tests.port = 3306
 
 #--------------------------------------------------------------------
+# EMAIL
+#--------------------------------------------------------------------
+
+email.protocol = 'smtp'
+email.SMTPHost = 'smtp.example.com'
+email.SMTPUser = 'your_email@example.com'
+email.SMTPPass = 'your_email_password'
+email.SMTPPort = 587
+email.SMTPCrypto = 'tls' # atau 'ssl'
+email.fromEmail = 'no-reply@example.com'
+email.fromName = 'Your App Name'
+
+#--------------------------------------------------------------------
 # ENCRYPTION
 #--------------------------------------------------------------------
 
-# encryption.key =
+encryption.key = hex2bin:24f32b73e1de859b3db296ac7562368d807bb7b0a979091da715c8fdca1b7e7c
+jwt.secretKey = 'hex2bin:24f32b73e1de859b3db296ac7562368d807bb7b0a979091da715c8fdca1b7e7c' # Ganti dengan kunci rahasia yang kuat
+jwt.expirationTime = 86400 # 3600 Detik (1 jam) 86400 / 24 jam
 
 #--------------------------------------------------------------------
 # SESSION
@@ -62,8 +113,192 @@
 # session.driver = 'CodeIgniter\Session\Handlers\FileHandler'
 # session.savePath = null
 
+# // Ubah driver dari 'File' menjadi 'Database'
+session.driver              = 'CodeIgniter\Session\Handlers\DatabaseHandler'
+session.cookieName          = 'ci_sessions'
+session.expiration          = 7200 #// Contoh: 2 jam (dalam detik)
+session.savePath            = 'ci_sessions'
+session.matchIP             = true
+session.timeToUpdate        = 300
+session.regenerateDestroy   = false
+
 #--------------------------------------------------------------------
 # LOGGER
 #--------------------------------------------------------------------
 
 # logger.threshold = 4
+
+
+
+#--------------------------------------------------------------------
+# Catatan Input OR Independent
+#--------------------------------------------------------------------
+
+
+# # Kode Brand ( CZ, HB, SC )
+
+# # Group Lensa
+# 	#BIFOCAL "BF"
+# 	#OFFICELENS "OL"
+# 	#PROGRESSIVE "PG"
+# 	#PROGRESSIVE FREE FORM "PF"
+# 	#SINGLE VISION "SV"
+# 	#SINGLE VISION FREE FORM "SF"
+	
+# # Select Lensa L|R
+#     SELECT * FROM mst_jlensa_5digit 
+#     WHERE type_customer IN ("I","A") AND kd_brand="CZ" AND jenis_lensa="SF" 
+#     LIMIT 10;
+	
+# # SPHERIS ========
+#     SELECT DISTINCT nama_jpower 
+#     FROM db_tol.mst_jpower 
+#     WHERE jenis_jpower="S" AND aktif=1 
+#     AND CAST(nama_jpower AS DECIMAL(6,2)) < 0 
+#     UNION ALL 
+#     SELECT "0.00" nama_jpower 
+#     UNION ALL 
+#     SELECT DISTINCT nama_jpower 
+#     FROM db_tol.mst_jpower 
+#     WHERE jenis_jpower="S" AND aktif=1 
+#     AND CAST(nama_jpower AS DECIMAL(6,2)) > 0 
+#     ORDER BY CAST(nama_jpower AS DECIMAL(6,2)) DESC ;
+
+# # CYLINDER =========
+#     SELECT 
+#     	kode_lensa_5digit,kode_jspheris,kode_jcylinder AS kode_cyl 
+#     FROM 
+#     	mst_over_power 
+#     WHERE 
+#     	kode_lensa_5digit='97677' 
+#     	AND kode_jspheris='-0.50' 
+#     	AND aktif=1;
+    	
+# # AXIS ==========
+#   SELECT DISTINCT nama_jpower
+#   FROM db_tol.mst_jpower
+#   WHERE jenis_jpower="A" 
+#   AND aktif=1
+#   ORDER BY CAST(nama_jpower AS DECIMAL(6,2));
+	
+		
+# # ADD ============================
+
+# 	$cek_1 = SELECT * FROM db_tol.mst_add_h WHERE lensa_5digit_id = "97677" AND lens_aktif = 1 ;
+# 	# if($cek_1) #bila ada datanya, maka :
+# 		$data_add = SELECT d.* FROM db_tol.mst_add_d d WHERE d.lensa_5digit_id ="97677" AND d.cyl_aktif = 1 ;
+# 	# else
+# 		$cek_2 = SELECT * FROM mst_jpower_lensa_prs WHERE lensa_5digit_id="97677" AND jenis_jpower="D" AND aktif=1 ORDER BY CAST(nama_jpower AS DECIMAL(6,2));
+# 		#if($cek_2)
+# 		  $data_add = $cek_2;
+# 		# else
+# 		  $data_add = SELECT DISTINCT nama_jpower FROM db_tol.mst_jpower WHERE jenis_jpower="D" AND aktif=1 ORDER BY CAST(nama_jpower AS DECIMAL(6,2));
+
+
+# # NO PO = Diambil Dari No Penjualan Optik Independent , Input Manual, Validasi Karakter , Wajib Di isi
+# # Nama Pasien =  Isi Sendiri| Input Manual , Validasi Karakter, Boleh Kosong
+
+# # Usia = cek untuk kode lensa, jika kode L dan R sama cek kode lensa untuk validasi umur boleh dikosongkan
+# 	SELECT * FROM mst_jlensa_5digit WHERE lensa_5digit_id="97677"
+# 	AND ((nama_lensa_5digit LIKE "%SMARTLIFE%") OR (nama_lensa_5digit LIKE "%LIGHT 2%"));
+# 	# kalau L dan R tidak sama usia boleh kosongkan
+# 	# Isi Sendiri| Input Manual , Validasi Numeric
+
+# #  --------Base CRV1 = Isi Sendiri| Input Manual , Validasi Karakter TIDAK DIPAKAI
+
+## Base CRV2 = Isi Sendiri| Input Manual , Validasi Karakter, Optional
+## PRISMA1 = 0-15 , Optional
+## BASE 1  = 0-399 , Optional
+## PRISMA2 = Isi Sendiri| Input Manual, Validasi Karakter , Optional
+## BASE 2 = Isi Sendiri| Input Manual, Validasi Karakter , Optional
+## PDF = Isi Sendiri| Input Manual, Boleh 13.1 (satu digit belakang koma) , Optional
+## PDN = Isi Sendiri| Input Manual, Boleh 13.1 (satu digit belakang koma) , Optional
+## QTY = 1 , Wajib Bila Ada Kode Lensa di isi
+
+
+## RIGHT    = ET : Numeric, Default 0 (NOL) , Optional | CT : Numeric, Default 0 (NOL) , Optional
+## LEFT     = ET : Numeric, Default 0 (NOL) , Optional | CT : Numeric, Default 0 (NOL) , Optional
+
+## WA : Numeric, Default 0 (NOL) , Optional | V
+## PT : Numeric, Default 0 (NOL) , Optional | V
+## BVD : Numeric, Default 0 (NOL) , Optional | V
+## FFV : Numeric, Default 0 (NOL) , Optional | V
+## V CODE : Numeric, Default 0 (NOL) , Optional | V
+## RD : Numeric, Default 0 (NOL) , Optional | V
+
+## PE : Numeric, Default Null , Optional | V
+## MBS: Numeric, Default 0 (NOL) , Optional | V
+
+## MID : Numeric, Default 0 (NOL) , Optional | 
+## B :Numeric, Default 0 (NOL) , Optional | 
+## ED Numeric, Default 0 (NOL) , Optional | 
+## A : Numeric, Default 0 (NOL) , Optional | 
+## DBL : Numeric, Default 0 (NOL) , Optional | 
+## SH/PV : Numeric, Default 0 (NOL) , Optional | 
+
+
+
+# ### Kondisi Frame = Isi Sendiri| Input Manual, Validasi Karakter
+
+
+# ### Model Frame = 1-11 , gambar nanti di cdn | V
+
+# ### Status Frame = ( COMPLETE = C , ENCLOSED = E, TO COME = T) , Boleh Kosong | V
+
+# ### Jenis Frame = 1-6 ( BOR, BOR LEVEL, FULL METAL, FULL PLASTIC, NYLOR, NYLOR METAL ) | V
+
+# ### NOTE = Isi Sendiri| Input Manual, Validasi Karakter | V
+
+# ### Special Instruction = Isi Sendiri| Input Manual, Validasi Karakter | V
+
+
+
+# get nilai koridor
+    # // IF SH/PV <> '') THEN
+    # // BEGIN
+    # // seg_height = SH/PV;
+    # // IF (seg_height <= 18) THEN
+    # //     koridor := 'SHORT'
+    # // ELSE IF (seg_height >= 19) THEN
+    # //     koridor := 'LONG';
+    # // EditSHPV.Enabled := FALSE;
+
+    
+# `mst_sales_customer`
+# `mst_customer`   
+# `mst_jlensa_5digit`
+# `mst_base_sph`
+# `mst_jjasa`
+# `mst_cyl_add`;
+
+
+# Yang belum 
+# Get data mst_customer join ke mst_salesman
+
+
+
+
+
+
+
+#--------------------------------------------------------------------
+#------- Catatan Develop --------------------------------------------
+
+# 13/06/2026
+# update seluruh data master
+# pengecekan field transaksi
+# 
+
+
+# 09/06/2025
+# Siapkan Data Untuk di server Live testing 
+# Create Transaction OR 
+# Data gambar model dari master model
+
+# 05/06/2025
+# getAll Lensa pakai paging - DONE
+# Invalid token login dengan jwt - DONE
+# permission Global pakai appPermission - DONE
+# siapkan field tabel trn_or_01 dan or_01_jasa - DONE
+    
+#--------------------------------------------------------------------

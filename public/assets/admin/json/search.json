@@ -1,0 +1,11 @@
+[
+  {
+    "label": "Dashboard",
+    "url": "dashboard/"
+  },
+
+  {
+    "label": "Settings > General",
+    "url": "settings/general"
+  }
+]

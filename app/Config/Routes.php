@@ -10,7 +10,7 @@ $routes->get('/', 'Home::index'); // Halaman default CI4, bisa dihapus/diubah
 $routes->group('api/v1', function ($routes) {
 
     // Auth (Login, Register, Reset Password) - Tidak perlu filter auth di sini
-    $routes->group('auth', function ($routes) {
+    $routes->group('auth', ['namespace' => 'App\Controllers\Api'], function ($routes) {
         $routes->post('register', 'AuthController::register');
         $routes->post('login', 'AuthController::login');
         $routes->post('forgot-password', 'AuthController::forgotPassword');
@@ -19,7 +19,7 @@ $routes->group('api/v1', function ($routes) {
     });
 
     // Public Data (Produk & Kategori) - Menggunakan API Key
-    $routes->group('public', ['filter' => 'apiKeyAuth'], function ($routes) {
+    $routes->group('public', ['namespace' => 'App\Controllers\Api', 'filter' => 'apiKeyAuth'], function ($routes) {
         $routes->get('categories', 'PublicController::getCategories');
         $routes->get('categories/(:segment)', 'PublicController::getCategory/$1');
         $routes->get('products', 'PublicController::getProducts');
@@ -30,7 +30,7 @@ $routes->group('api/v1', function ($routes) {
     });
 
     // Client Area - Membutuhkan JWT dan permission yang sesuai
-    $routes->group('client', ['namespace' => 'App\Controllers\Client', 'filter' => 'jwtAuth'], function ($routes) {
+    $routes->group('client', ['namespace' => 'App\Controllers\Api\Client', 'filter' => 'jwtAuth'], function ($routes) {
         
         $routes->get('profile', 'ClientController::profile'); // view-own-profile
 
@@ -72,7 +72,6 @@ $routes->group('api/v1', function ($routes) {
         // End Transaksi
 
 
-
         // Tanpa Permission
         $routes->post('transactions', 'ClientController::createTransaction');
         $routes->get('transactions', 'ClientController::listTransactions');
@@ -87,43 +86,8 @@ $routes->group('api/v1', function ($routes) {
     });
 
 
-    // Admin Area OLD - Membutuhkan JWT dan role 'admin' : "TIDAK DIGUNAKAN SUDAH ADA PERMISSION" 
-    // $routes->group('admin', ['filter' => ['jwtAuth', 'role:admin']], function ($routes) {
-        //     // User Management (Opsional, jika admin bisa manage user lain)
-        //     $routes->get('users', 'AdminController::getUsers');
-        //     $routes->post('users', 'AdminController::createUser'); // Hati-hati dengan pembuatan user oleh admin
-        //     $routes->put('users/(:num)', 'AdminController::updateUser/$1');
-
-        //     // Category Management
-        //     $routes->get('categories', 'AdminController::getCategories');
-        //     $routes->post('categories', 'AdminController::createCategory');
-        //     $routes->put('categories/(:num)', 'AdminController::updateCategory/$1');
-        //     $routes->delete('categories/(:num)', 'AdminController::deleteCategory/$1');
-
-        //     // Product Management
-        //     $routes->get('products', 'AdminController::getProducts');
-        //     $routes->get('products/(:num)', 'AdminController::getProductById/$1'); // Get Per Id
-        //     $routes->post('products', 'AdminController::createProduct');
-        //     $routes->put('products/(:num)', 'AdminController::updateProduct/$1'); // Bisa juga POST dengan _method=PUT
-        //     $routes->delete('products/(:num)', 'AdminController::deleteProduct/$1');
-            
-        //     // API Key Management
-        //     $routes->get('apikeys', 'AdminController::getApiKeys');
-        //     $routes->post('apikeys', 'AdminController::createApiKey');
-        //     $routes->put('apikeys/(:num)', 'AdminController::updateApiKey/$1');
-        //     $routes->delete('apikeys/(:num)', 'AdminController::deleteApiKey/$1');
-
-        //     // Transaction Management (View, Update Status)
-        //     $routes->get('transactions', 'AdminController::getAllTransactions');
-        //     $routes->get('transactions/(:segment)', 'AdminController::getAdminTransactionDetail/$1');
-        //     $routes->put('transactions/(:segment)/status', 'AdminController::updateTransactionStatus/$1');
-
-        //     $routes->get('karyawans', 'AdminController::getKaryawan');
-    // });
-
-
-    // Admin Area - Namespace untuk controller Admin
-    $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'jwtAuth'], function ($routes) {
+    // Admin Area - Membutuhkan JWT dan permission yang sesuai
+    $routes->group('admin', ['namespace' => 'App\Controllers\Api\Admin', 'filter' => 'jwtAuth'], function ($routes) {
         
         // Role Management
         $routes->group('roles', ['filter' => 'permission:manage-roles'], function ($routes) {
@@ -205,25 +169,83 @@ $routes->group('api/v1', function ($routes) {
 
 });
 
-// // Fallback untuk route tidak ditemukan
+
+
+// =================================================================
+// WEB ROUTES (STATEFUL - SESSION AUTH)
+// =================================================================
+
+    // Auth untuk Web (Login Form, Logout)
+    // Gunakan namespace agar rapi
+    // $routes->group('', ['namespace' => 'App\Controllers\Web'], function ($routes) {
+        // $routes->get('login', 'Web\AuthController::loginForm', ['as' => 'web.login.form']);
+        // $routes->post('login', 'Web\AuthController::attemptLogin', ['as' => 'web.login.attempt']);
+        // $routes->get('logout', 'Web\AuthController::logout', ['as' => 'web.logout']);
+    // });
+
+    // Grup untuk Dashboard Admin
+    // Memerlukan login dan peran 'admin'
+    $routes->group('admin', ['namespace' => 'App\Controllers\Web\Admin', 'filter' => 'webAuth:Super Admin'], function ($routes) {
+        $routes->get('/', 'DashboardController::index', ['as' => 'admin.dashboard']);
+        $routes->get('products', 'TransaksiController::index', ['as' => 'admin.products']);
+        // ... Tambahkan rute admin lainnya (misal: untuk CRUD user, roles, dll)
+    });
+
+    // Grup untuk Dashboard Client
+    // Memerlukan login dan peran 'client'
+    $routes->group('client', ['namespace' => 'App\Controllers\Web\Client', 'filter' => 'webAuth:Client'], function ($routes) {
+        $routes->get('/', 'DashboardController::index', ['as' => 'client.dashboard']);
+        // ... Tambahkan rute client lainnya (misal: melihat detail transaksi)
+    });
+
+    // Halaman utama, jika sudah login akan diarahkan
+    $routes->get('/direct_login', 'Web\DashboardRedirectController::index', ['filter' => 'webAuth']);
+
+
+
+
+
+// Rute untuk login/logout admin (tidak perlu filter auth)
+$routes->get('/login', 'Backend\AuthController::loginView');
+$routes->post('/login', 'Backend\AuthController::loginAction');
+$routes->get('/logout', 'Backend\AuthController::logout');
+
+// Grup untuk semua halaman admin yang terproteksi
+$routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' => 'adminAuth'], function ($routes) {
+    $routes->get('/', 'DashboardController::index');
+    $routes->get('dashboard', 'DashboardController::index');
+
+    // Rute untuk manajemen transaksi
+    $routes->get('transaksi', 'TransaksiController::index');
+    $routes->get('transaksi/detail/(:any)', 'TransaksiController::detail/$1');
+    $routes->post('transaksi/update_status', 'TransaksiController::updateStatus');
+    
+    // Rute untuk manajemen pengguna
+    $routes->get('users', 'UserController::index');
+
+});
+
+
+
+
+
+
 // $routes->set404Override(function(){
+//     // Muat helper response kita yang sudah ada
 //     helper('response');
-//     return api_error('Endpoint not found', \CodeIgniter\HTTP\ResponseInterface::HTTP_NOT_FOUND);
+    
+//     // Gunakan helper api_error() untuk membuat objek Response yang konsisten
+//     $response = api_error('Endpoint Not Found', \CodeIgniter\HTTP\ResponseInterface::HTTP_NOT_FOUND, [
+//         'route' => 'The requested resource or endpoint does not exist.'
+//     ]);
+    
+//     // Kirim respons (header dan body) secara manual ke browser
+//     $response->send();
+    
+//     // Hentikan eksekusi skrip agar CodeIgniter tidak mencoba memproses lebih lanjut
+//     exit();
 // });
 
+
 // Fallback untuk route tidak ditemukan (404 Not Found)
-$routes->set404Override(function(){
-    // Muat helper response kita yang sudah ada
-    helper('response');
-    
-    // Gunakan helper api_error() untuk membuat objek Response yang konsisten
-    $response = api_error('Endpoint Not Found', \CodeIgniter\HTTP\ResponseInterface::HTTP_NOT_FOUND, [
-        'route' => 'The requested resource or endpoint does not exist.'
-    ]);
-    
-    // Kirim respons (header dan body) secara manual ke browser
-    $response->send();
-    
-    // Hentikan eksekusi skrip agar CodeIgniter tidak mencoba memproses lebih lanjut
-    exit();
-});
+$routes->set404Override('App\Controllers\CustomErrors::show404');
