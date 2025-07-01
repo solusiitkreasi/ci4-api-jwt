@@ -205,7 +205,7 @@
 
     <div class="heroe">
 
-        <h1>Welcome to API TOL V-1.0</h1>
+        <h1>Welcome to TOL API V.1.0</h1>
 
         <h2>The small framework with powerful features</h2>
 

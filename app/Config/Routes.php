@@ -7,6 +7,11 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index'); // Halaman default CI4, bisa dihapus/diubah
 
+
+// =================================================================
+// API ROUTES
+// =================================================================
+
 $routes->group('api/v1', function ($routes) {
 
     // Auth (Login, Register, Reset Password) - Tidak perlu filter auth di sini
@@ -84,7 +89,6 @@ $routes->group('api/v1', function ($routes) {
 
         // Tambahkan endpoint client lainnya
     });
-
 
     // Admin Area - Membutuhkan JWT dan permission yang sesuai
     $routes->group('admin', ['namespace' => 'App\Controllers\Api\Admin', 'filter' => 'jwtAuth'], function ($routes) {
@@ -170,40 +174,9 @@ $routes->group('api/v1', function ($routes) {
 });
 
 
-
 // =================================================================
 // WEB ROUTES (STATEFUL - SESSION AUTH)
 // =================================================================
-
-    // Auth untuk Web (Login Form, Logout)
-    // Gunakan namespace agar rapi
-    // $routes->group('', ['namespace' => 'App\Controllers\Web'], function ($routes) {
-        // $routes->get('login', 'Web\AuthController::loginForm', ['as' => 'web.login.form']);
-        // $routes->post('login', 'Web\AuthController::attemptLogin', ['as' => 'web.login.attempt']);
-        // $routes->get('logout', 'Web\AuthController::logout', ['as' => 'web.logout']);
-    // });
-
-    // Grup untuk Dashboard Admin
-    // Memerlukan login dan peran 'admin'
-    $routes->group('admin', ['namespace' => 'App\Controllers\Web\Admin', 'filter' => 'webAuth:Super Admin'], function ($routes) {
-        $routes->get('/', 'DashboardController::index', ['as' => 'admin.dashboard']);
-        $routes->get('products', 'TransaksiController::index', ['as' => 'admin.products']);
-        // ... Tambahkan rute admin lainnya (misal: untuk CRUD user, roles, dll)
-    });
-
-    // Grup untuk Dashboard Client
-    // Memerlukan login dan peran 'client'
-    $routes->group('client', ['namespace' => 'App\Controllers\Web\Client', 'filter' => 'webAuth:Client'], function ($routes) {
-        $routes->get('/', 'DashboardController::index', ['as' => 'client.dashboard']);
-        // ... Tambahkan rute client lainnya (misal: melihat detail transaksi)
-    });
-
-    // Halaman utama, jika sudah login akan diarahkan
-    $routes->get('/direct_login', 'Web\DashboardRedirectController::index', ['filter' => 'webAuth']);
-
-
-
-
 
 // Rute untuk login/logout admin (tidak perlu filter auth)
 $routes->get('/login', 'Backend\AuthController::loginView');
@@ -226,26 +199,25 @@ $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' =>
 });
 
 
+// Fallback untuk route tidak ditemukan (404 Not Found)
+$routes->set404Override('App\Controllers\CustomErrors::show404');
 
 
 
 
 // $routes->set404Override(function(){
-//     // Muat helper response kita yang sudah ada
-//     helper('response');
-    
-//     // Gunakan helper api_error() untuk membuat objek Response yang konsisten
-//     $response = api_error('Endpoint Not Found', \CodeIgniter\HTTP\ResponseInterface::HTTP_NOT_FOUND, [
-//         'route' => 'The requested resource or endpoint does not exist.'
-//     ]);
-    
-//     // Kirim respons (header dan body) secara manual ke browser
-//     $response->send();
-    
-//     // Hentikan eksekusi skrip agar CodeIgniter tidak mencoba memproses lebih lanjut
-//     exit();
+    //     // Muat helper response kita yang sudah ada
+    //     helper('response');
+        
+    //     // Gunakan helper api_error() untuk membuat objek Response yang konsisten
+    //     $response = api_error('Endpoint Not Found', \CodeIgniter\HTTP\ResponseInterface::HTTP_NOT_FOUND, [
+    //         'route' => 'The requested resource or endpoint does not exist.'
+    //     ]);
+        
+    //     // Kirim respons (header dan body) secara manual ke browser
+    //     $response->send();
+        
+    //     // Hentikan eksekusi skrip agar CodeIgniter tidak mencoba memproses lebih lanjut
+    //     exit();
 // });
 
-
-// Fallback untuk route tidak ditemukan (404 Not Found)
-$routes->set404Override('App\Controllers\CustomErrors::show404');

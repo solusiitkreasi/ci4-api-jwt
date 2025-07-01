@@ -27,8 +27,6 @@ class TransaksiController extends BaseController
             'totalPages'  => $transaksiModel->pager->getPageCount('transaksi'),   // The total page count
         ];
 
-        // tesx($data['pager']->links());
-
         return view('backend/pages/transaksi/list', $data);
     }
 }

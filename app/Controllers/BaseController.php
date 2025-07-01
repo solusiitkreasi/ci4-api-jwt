@@ -28,6 +28,8 @@ abstract class BaseController extends Controller
      */
     protected $request;
 
+    public $menu_sidebar;
+
     /**
      * An array of helpers to be loaded automatically upon
      * class instantiation. These helpers will be available
@@ -53,6 +55,12 @@ abstract class BaseController extends Controller
 
         // Preload any models, libraries, etc, here.
 
+        $menuModel = model('App\Models\MenuModel');
+
+        $this->menu_sidebar = $menuModel->generateTree();
+
+        // tesx($this->menu_sidebar);
+        
         // E.g.: $this->session = service('session');
         // $this->session = \Config\Services::session(); // Jika butuh session
         $this->validator = \Config\Services::validation();

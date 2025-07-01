@@ -29,7 +29,6 @@
     
 </head>
 
-
 <body>
 
     <div id="root">
@@ -53,7 +52,6 @@
         </main>
 
 	</div>
-
 
     <?= $this->include('backend/layouts/partials/_scripts') ?>
 

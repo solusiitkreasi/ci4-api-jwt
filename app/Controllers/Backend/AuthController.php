@@ -56,21 +56,25 @@ class AuthController extends BaseController
             'name'          => $user['name'],
             'email'         => $user['email'],
             'role_id'       => $getRoles[0]['id'],
+            'roles'         => $getRoles[0]['name'],
             'is_logged_in'  => true
         ];
+
+        // tesx($sessionData);
 
         #---  Arahkan ke dashboard yang sesuai
         // if($getRoles[0]['id'] == '2'){
             // $sessionData['is_logged_in'] = true;
             // Redirect ke dashboard atau ke URL yang disimpan sebelumnya
-            $redirectUrl = $session->get('redirect_url') ?? '/backend/dashboard';
+            // $redirectUrl = $session->get('redirect_url') ?? '/backend/dashboard';
         // }else{
         //     // $sessionData['is_client_logged_in'] = true;
         //     $redirectUrl = $session->get('redirect_url') ?? '/client/dashboard';
         // }
 
-        $session->set($sessionData);
+        $redirectUrl = $session->get('redirect_url') ?? '/backend/dashboard';
 
+        $session->set($sessionData);
 
         $session->remove('redirect_url');
         

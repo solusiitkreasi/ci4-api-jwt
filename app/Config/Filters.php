@@ -40,7 +40,6 @@ class Filters extends BaseFilters
         'permission'    => \App\Filters\PermissionFilter::class, // <-- Tambahkan ini
         'dbCheck' => \App\Filters\DatabaseConnectionFilter::class,
         'adminAuth' => \App\Filters\AdminAuthFilter::class,
-        'webAuth' => \App\Filters\WebAuthFilter::class,
     ];
 
     /**

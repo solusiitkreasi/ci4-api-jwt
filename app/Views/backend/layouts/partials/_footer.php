@@ -5,7 +5,7 @@
             <div class="row">
                 <div class="col-12 col-sm-6">
                     <p class="mb-0 text-muted">
-                    Copyright &copy; <?= date('Y') ?>
+                    Copyright &copy; TOL API <?= date('Y') ?>
                     </p>
                 </div>
                 <div class="col-sm-6 d-none d-sm-block">

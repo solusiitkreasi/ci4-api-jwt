@@ -62,73 +62,67 @@
 </head>
 
 <body class="h-100">
-    <!-- Background Start -->
     <div class="fixed-background"></div>
-    <!-- Background End -->
-
 
     <div id="root" class="h-100">
-
 
         <div class="container-fluid p-0 h-100 position-relative">
             <div class="row g-0 h-100">
 
-            <!-- Left Side Start -->
-            <div class="col-12 col-lg-auto h-100 pb-4 px-4 pt-0 p-lg-0">
-                <div class="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-left-border">
-                    <div class="sw-lg-50 px-5">
-                        <div class="sh-11">
-                            <a href="#">
-                                <div class="logo-default-login"></div>
-                            </a>
-                        </div>
-                        <div class="mb-5">
-                            <p class="h6">Please use your credentials to login.</p>
-                            <p class="h6">
-                                If you are not a member, please
-                                <a href="#" style="text-decoration:underline;">register</a>
-                                .
-                            </p>
-                        </div>
-
-                        <div class="mt-1 mb-3">
-                        <?php //$this->load->view('templates/notif') ?>
-
-                        <?php if(session()->get('error')): ?>
-                            <div class="alert alert-danger" role="alert">
-                                <?= session()->get('error') ?>
+                <!-- Left Side Start -->
+                <div class="col-12 col-lg-auto h-100 pb-4 px-4 pt-0 p-lg-0">
+                    <div class="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-left-border">
+                        <div class="sw-lg-50 px-5">
+                            <div class="sh-11">
+                                <a href="#">
+                                    <div class="logo-default-login"></div>
+                                </a>
                             </div>
-                        <?php endif; ?>
+                            <div class="mb-5">
+                                <p class="h6">Please use your credentials to login.</p>
+                                <p class="h6">
+                                    If you are not a member, please
+                                    <a href="#" style="text-decoration:underline;">register</a>
+                                </p>
+                            </div>
 
-                        <div>
-                            <form action="/login" method="post" novalidate>
-                                <?= csrf_field() ?>
-                                <div class="mb-3 filled form-group tooltip-end-top">
-                                    <i data-acorn-icon="email"></i>
-                                    <input type="email" class="form-control" name="email" id="user" placeholder="Email" autocomplete="off" required tabIndex="1" autofocus/>
+                            <div class="mt-1 mb-3">
+                            <?php //$this->load->view('templates/notif') ?>
+
+                            <?php if(session()->get('error')): ?>
+                                <div class="alert alert-danger" role="alert">
+                                    <?= session()->get('error') ?>
                                 </div>
-                                <div class="mb-3 filled form-group tooltip-end-top">
-                                    <i data-acorn-icon="lock-on"></i>
-                                    <input class="form-control pe-7" name="password" id="password" type="password" placeholder="Password" autocomplete="off" required tabIndex="2"/>
-                                    <i class="fa fa-eye" onclick="showPass()" id="eye" title="Show Password"></i>
-                                </div>
-                                <button tabIndex="3" type="submit" class="btn btn-lg btn-primary mr-2">Login</button>
-                                <a class="text-medium t-3 e-3" type="button" style="text-decoration:underline;" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#staticBackdropExample">Forgot Password?</a>
-                            </form>
+                            <?php endif; ?>
+
+                            <div>
+                                <form action="/login" method="post" novalidate>
+                                    <?= csrf_field() ?>
+                                    <div class="mb-3 filled form-group tooltip-end-top">
+                                        <i data-acorn-icon="email"></i>
+                                        <input type="email" class="form-control" name="email" id="user" placeholder="Email" autocomplete="off" required tabIndex="1" autofocus/>
+                                    </div>
+                                    <div class="mb-3 filled form-group tooltip-end-top">
+                                        <i data-acorn-icon="lock-on"></i>
+                                        <input class="form-control pe-7" name="password" id="password" type="password" placeholder="Password" autocomplete="off" required tabIndex="2"/>
+                                        <i class="fa fa-eye" onclick="showPass()" id="eye" title="Show Password"></i>
+                                    </div>
+                                    <button tabIndex="3" type="submit" class="btn btn-lg btn-primary mr-2">Login</button>
+                                    <a class="text-medium t-3 e-3" type="button" style="text-decoration:underline;" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#staticBackdropExample">Forgot Password?</a>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- Left Side End -->
+                <!-- Left Side End -->
 
-            <!-- Right Side Start -->
-            <div class="offset-0 col-12 d-none d-lg-flex offset-md-1 col-lg ">  <!-- h-lg-100 -->
-                <div class="min-h-100 d-flex align-items-center">
-                    
+                <!-- Right Side Start -->
+                <div class="offset-0 col-12 d-none d-lg-flex offset-md-1 col-lg ">  <!-- h-lg-100 -->
+                    <div class="min-h-100 d-flex align-items-center">
+                        
+                    </div>
                 </div>
-            </div>
-            <!-- Right Side End -->
-
+                <!-- Right Side End -->
 
             </div>
         </div>
@@ -136,36 +130,34 @@
     </div>
 
     <!-- Modal  Launch static backdrop modal-->
-    <div class="modal fade" id="staticBackdropExample" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-            role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <form action="<?php echo base_url('auth/forgot_password') ?>" method="post">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalForgotLabel"> Forgot Password</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="input-group mb-3">
-                                <input id="email_forgot" name="email_forgot" type="email" class="form-control" placeholder="Email" autocomplete="off" required>
-                                <a href="#" class="btn btn-primary default">
-                                    <i data-acorn-icon="search"></i> Check
-                                </a>
-                            </div>
-
-                            <span class="mt-2" id="hasil_email"></span>
-
-                        </div>
-
-                        <div class="modal-footer d-flex justify-content-between align-items-center">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal"><span aria-hidden="true">&times;</span> Close</button>
-                            <button type="submit" class="btn btn-info"><i class="fa fa-envelope"></i> Send</button>
-                        </div>
+    <div class="modal fade" id="staticBackdropExample" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="<?php echo base_url('auth/forgot_password') ?>" method="post">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalForgotLabel"> Forgot Password</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                </form>
-            </div>
-        </div>
+                    <div class="modal-body">
+                        <div class="input-group mb-3">
+                            <input id="email_forgot" name="email_forgot" type="email" class="form-control" placeholder="Email" autocomplete="off" required>
+                            <a href="#" class="btn btn-primary default">
+                                <i data-acorn-icon="search"></i> Check
+                            </a>
+                        </div>
 
+                        <span class="mt-2" id="hasil_email"></span>
+
+                    </div>
+
+                    <div class="modal-footer d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><span aria-hidden="true">&times;</span> Close</button>
+                        <button type="submit" class="btn btn-info"><i class="fa fa-envelope"></i> Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Vendor Scripts Start -->
     <script src="<?= base_url('assets/admin/') ?>js/vendor/jquery-3.5.1.min.js"></script>

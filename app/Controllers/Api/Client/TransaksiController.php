@@ -378,6 +378,8 @@ class TransaksiController extends BaseController
                 return api_error('Failed to create transaksi.', 500, $this->transaksiModel->errors());
             }
 
+            
+
             if($data_jasa){
                 // Simpan ke tabel 'jasa_data'
                 $trnJasaData = [];
@@ -394,11 +396,24 @@ class TransaksiController extends BaseController
                     $db->transRollback();
                     return api_error('Failed to save jasa details.', 500, $this->transaksiJasaModel->errors());
                 }
+            }else{
+
+
+                if($data_lensa->hanya_jasa == '1'){
+                    $db->transRollback();
+                    return api_error('Failed to save data jasa details cannot empty', 404);
+                }
+                
             }
+
 
             $logJasa ='';
             if(!$data_jasa){
                 $logJasa = '(Tidak Ada Jasa)';
+            }else{
+                if($data_lensa->hanya_jasa == '1'){
+                    $logJasa = '(Hanya Jasa)';
+                }
             }
 
             // Simpan ke tabel 'log_history_transaksi'
