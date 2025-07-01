@@ -126,9 +126,12 @@ _modules/*
 /phpunit*.xml
 
 
-
+#Read Docs
 __pycache__/
 *.pyc
-build/
+docs/build/
 dist/
 docs/_build/
+
+#Backup
+zzbc/
