@@ -17,16 +17,17 @@
                 </div>
             <?php endif; ?>
             <form method="post" action="<?= base_url('backend/role/permissions/'.$role['id']) ?>">
+                <div class="mb-2">
+                    <input type="checkbox" id="checkAllMaster" class="form-check-input" style="margin-right:8px;">
+                    <label for="checkAllMaster" style="font-weight:bold;cursor:pointer;">Check/Uncheck Semua Permission</label>
+                </div>
                 <div class="mb-3">
                     <?php 
                     require __DIR__ . '/_permission_tree.php';
                     renderPermissionTree($permissions, $role_permission_ids);
                     ?>
                 </div>
-                <div class="mb-2">
-                    <input type="checkbox" id="checkAllMaster" class="form-check-input" style="margin-right:8px;">
-                    <label for="checkAllMaster" style="font-weight:bold;cursor:pointer;">Check/Uncheck Semua Permission</label>
-                </div>
+                
                 <button type="submit" class="btn btn-primary">Simpan Permission</button>
                 <a href="<?= base_url('backend/role') ?>" class="btn btn-secondary">Kembali</a>
             </form>

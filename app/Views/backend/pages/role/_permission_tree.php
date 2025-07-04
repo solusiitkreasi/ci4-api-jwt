@@ -11,7 +11,7 @@ function renderPermissionTree($permissions, $role_permission_ids, $level = 0, $p
         echo '<span class="drag-handle" title="Geser"><i class="bi bi-list"></i>☰</span>';
         echo '<div class="form-check d-inline-block">';
         echo '<input class="form-check-input" type="checkbox" name="permission_ids[]" value="'.htmlspecialchars($perm['id']).'" id="perm'.$perm['id'].'" '.(in_array($perm['id'], $role_permission_ids) ? ' checked' : '').' >';
-        echo '<label class="form-check-label" for="perm'.$perm['id'].'" style="'.$labelStyle.'">'.htmlspecialchars($perm['name']).' <small>('.htmlspecialchars($perm['slug']).')</small></label>';
+        echo '<label class="form-check-label" for="perm'.$perm['id'].'" style="'.$labelStyle.'">'.strtoupper(htmlspecialchars($perm['description'])).' <small>('.htmlspecialchars($perm['slug']).')</small></label>';
         echo '</div>';
         if (!empty($perm['children'])) {
             renderPermissionTree($perm['children'], $role_permission_ids, $level+1, $perm['id']);

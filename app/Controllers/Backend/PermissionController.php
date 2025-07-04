@@ -25,25 +25,30 @@ class PermissionController extends BaseController
     public function create()
     {
         if (strtolower($this->request->getMethod()) === 'post') {
-            $data = $this->request->getPost();
-            $permissionModel = new PermissionModel();
-            $isParent = ($data['tipe_permission'] ?? 'parent') === 'parent';
-            $isSub = ($data['tipe_permission'] ?? '') === 'sub';
-            $isPermission = ($data['tipe_permission'] ?? '') === 'permission';
-            $menu_on = isset($data['menu_on']) ? 1 : 0;
-            $parent_id = null;
+            $data               = $this->request->getPost();
+            $permissionModel    = new PermissionModel();
+            $isParent           = ($data['tipe_permission'] ?? 'parent') === 'parent';
+            $isSub              = ($data['tipe_permission'] ?? '') === 'sub';
+            $isPermission       = ($data['tipe_permission'] ?? '') === 'permission';
+            $menu_on            = isset($data['menu_on']) ? 1 : 0;
+            $parent_id          = null;
+            $parent_link        = null;
             if ($isSub) {
-                $parent_id = $data['parent_id'] ?? null;
+                $parent_id      = $data['parent_id'] ?? null;
+                $parent_link    = $this->service->getPermission($parent_id)['link'];
             } elseif ($isPermission) {
-                $parent_id = $data['parent_id'] ?? null;
+                $parent_id      = $data['parent_id'] ?? null;
+                $parent_link    = $this->service->getPermission($parent_id)['link'];
             }
+
+
             $insertData = [
                 'name' => $data['name'],
                 'slug' => $data['slug'],
                 'description' => $data['description'] ?? null,
                 'parent_id' => $isParent ? 0 : $parent_id,
                 'menu_on' => $menu_on,
-                'link' => strtolower($data['name']),
+                'link' => $parent_link.'/'.strtolower($data['name']),
             ];
             $result = $permissionModel->insert($insertData);
             if ($result === false) {
