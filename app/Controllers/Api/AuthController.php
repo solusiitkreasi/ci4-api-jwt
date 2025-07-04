@@ -11,6 +11,9 @@ use App\Services\JWTService;
 use App\Models\UserModel;
 use App\Models\RoleModel;
 
+use App\Models\PasswordResetModel;
+use App\Models\UserActivationModel;
+
 
 class AuthController extends BaseController
 {
@@ -18,6 +21,10 @@ class AuthController extends BaseController
 
     protected $userModel;
     protected $roleModel;
+
+    protected $passwordResetModel;
+    protected $userActivationModel;
+
     protected $jwtService;
     protected $currentUser; // Untuk menyimpan data user yang sedang login
 
@@ -25,6 +32,10 @@ class AuthController extends BaseController
     {
         $this->userModel = new UserModel();
         $this->roleModel = new RoleModel();
+
+        $this->passwordResetModel = new PasswordResetModel();
+        $this->userActivationModel = new UserActivationModel();
+
         $this->jwtService = new JWTService();
         helper(['response', 'form', 'text']); // Muat helper 'text' untuk random_string
 
@@ -75,7 +86,7 @@ class AuthController extends BaseController
 
             $userId = $this->userModel->insert($userData);
 
-            tesx($this->userModel->errors());
+            // tesx($this->userModel->errors());
 
             if ($userId === false) {
                 $db->transRollback();
@@ -133,6 +144,10 @@ class AuthController extends BaseController
         }
 
         $user = $this->userModel->findByEmail($email);
+
+        if(empty($user)) {
+            return api_error('User not found',404);
+        }
         
         if (!$user || !password_verify($password, $user['password'])) {
             return api_error('Invalid credentials', ResponseInterface::HTTP_UNAUTHORIZED);
@@ -142,8 +157,6 @@ class AuthController extends BaseController
         $payload = [
             'user_id' => $user['id'],
             'email'   => $user['email'],
-            // Tidak perlu memasukkan roles/permissions di sini untuk menjaga token tetap kecil
-            // dan data selalu up-to-date dari DB saat dicek oleh PermissionFilter.
         ];
         $token = $this->jwtService->encode($payload);
 
@@ -158,37 +171,6 @@ class AuthController extends BaseController
 
         return api_response(['token' => $token, 'user' => $userResponse], 'Login successful');
 
-
-        // ----- OLD
-            // $rules = [
-            //     'email' => 'required|valid_email',
-            //     'password' => 'required'
-            // ];
-
-            // if (!$this->validate($rules)) {
-            //     return api_error('Validation failed', $this->getResponse()->getStatusCode(), $this->validator->getErrors());
-            // }
-
-            // $email = $this->request->getVar('email');
-            // $password = $this->request->getVar('password');
-
-            // $user = $this->userModel->findByEmail($email);
-
-            // if (!$user || !password_verify($password, $user['password'])) {
-            //     return api_error('Invalid credentials', 401);
-            // }
-
-            // // Jangan sertakan password dalam token payload
-            // $payload = [
-            //     'user_id' => $user['id'],
-            //     'email' => $user['email'],
-            //     'role' => $user['role']
-            //     // Tambahkan data lain yang relevan jika perlu
-            // ];
-            // $token = $this->jwtService->encode($payload);
-
-            // return api_response(['token' => $token, 'user' => ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'role' => $user['role']]], 'Login successful');
-        // ----- OLD
     }
 
     public function forgotPassword()
@@ -284,6 +266,147 @@ class AuthController extends BaseController
         log_message('info', "User '{$userName}' (ID: {$userFromRequest->id}) logged out.");
 
         return api_response(null, 'Logout successful. Please discard your token.');
+    }
+
+
+
+    //  New Endpoint With Send Emai;
+    // POST /api/auth/forgot-password
+    public function forgotPasswordMail()
+    {
+        $email = $this->request->getVar('email');
+
+        if (!$email) {
+            return $this->api_error('Email wajib diisi');
+        }
+
+        $userModel = new UserModel();
+        $user = $userModel->where('email', $email)->first();
+        if (!$user) {
+            // Jangan bocorkan jika email tidak ada
+            return api_error('email tidak ditemukan ');
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+
+        $resetModel = new PasswordResetModel();
+        $resetModel->insert([
+            'email'      => $email,
+            'token'      => $token,
+            'expires_at' => $expiresAt,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        // Kirim email link reset
+        $resetLink = site_url('reset_password?token=' . $token);
+        // $resetLink = 'https://apitol.topopticallab.co.id/reset_password?token=' . $token;
+
+        $data = [
+            'subject'       => 'Reset Password',
+            'title'         => 'Reset Password',
+            'message'       => '<p>Silakan klik tombol di bawah untuk mengganti password Anda:</p>',
+            'action_button' => '<a class="button " href="'.$resetLink.'">Reset Password</a>',
+            'year'          => date('Y'),
+        ];
+
+        // $emailBody = "Klik link berikut untuk reset password:\n$resetLink\nBerlaku 30 menit.";
+        // Render view
+        $emailBody = view('emails/reset_password', $data);
+
+        $send_mail = send_email($email, 'Reset Password', $emailBody);
+   
+        return api_response(['status' => 'success'], 'Link Reset password terkirim ke email');
+    }
+
+    // POST /api/auth/reset-password
+    public function resetPasswordMail()
+    {
+        $token = $this->request->getPost('token');
+        $password = $this->request->getPost('password');
+
+        if (!$token || !$password) {
+            return $this->api_error('Token dan password wajib diisi');
+        }
+
+        $resetModel = new PasswordResetModel();
+        $reset = $resetModel->where('token', $token)
+            ->where('expires_at >=', date('Y-m-d H:i:s'))
+            ->first();
+
+        if (!$reset) {
+            return $this->api_error('Token tidak valid/expired');
+        }
+
+        $userModel = new UserModel();
+        $user = $userModel->where('email', $reset['email'])->first();
+        if (!$user) {
+            return $this->api_error('User tidak ditemukan');
+        }
+
+        $userModel->update($user['id'], ['password' => password_hash($password, PASSWORD_DEFAULT)]);
+
+        // Hapus token setelah pakai
+        $resetModel->where('token', $token)->delete();
+
+        return $this->respond(['status' => 'success', 'message' => 'Password berhasil direset']);
+    }
+
+    // GET /api/auth/activate?token=xxx
+    public function activateAccount()
+    {
+        $token = $this->request->getGet('token');
+        if (!$token) {
+            return $this->api_error('Token wajib diisi');
+        }
+
+        $activationModel = new UserActivationModel();
+        $activation = $activationModel->where('token', $token)
+            ->where('expires_at >=', date('Y-m-d H:i:s'))
+            ->first();
+
+        if (!$activation) {
+            return $this->api_error('Token tidak valid/expired');
+        }
+
+        $userModel = new UserModel();
+        $userModel->update($activation['user_id'], ['is_active' => 1]);
+        $activationModel->where('token', $token)->delete();
+
+        return $this->respond(['status' => 'success', 'message' => 'Akun berhasil diaktivasi, silakan login.']);
+    }
+
+    // POST /api/auth/register (tambahan aktivasi email)
+    public function registerMail()
+    {
+        $userModel = new UserModel();
+        $email = $this->request->getPost('email');
+        $password = $this->request->getPost('password');
+        // Validasi dsb...
+
+        $userId = $userModel->insert([
+            'email'     => $email,
+            'password'  => password_hash($password, PASSWORD_DEFAULT),
+            'is_active' => 0,
+            // Data lain...
+        ]);
+
+        // Generate token aktivasi
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+1 day'));
+        $activationModel = new UserActivationModel();
+        $activationModel->insert([
+            'user_id'    => $userId,
+            'token'      => $token,
+            'expires_at' => $expiresAt,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        $activationLink = site_url('api/auth/activate?token=' . $token);
+        $emailBody = "Aktifkan akun Anda dengan klik link berikut:\n$activationLink\nBerlaku 1 hari.";
+        send_email($email, 'Aktivasi Akun', $emailBody);
+
+        return $this->respond(['status' => 'success', 'message' => 'Silakan cek email untuk aktivasi akun.']);
     }
 
 }

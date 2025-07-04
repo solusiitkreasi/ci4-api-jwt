@@ -135,3 +135,12 @@ docs/_build/
 
 #Backup
 zzbc/
+
+
+/vendor
+/writable
+.env
+.env.*
+/node_modules
+.idea/
+/docker/*.env

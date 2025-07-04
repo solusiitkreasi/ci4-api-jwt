@@ -13,7 +13,7 @@ class UserModel extends Model
     protected $useSoftDeletes   = false; // Jika Anda ingin soft delete, set true dan tambahkan 'deleted_at'
     // protected $allowedFields    = ['name', 'kode_customer',  'email', 'password', 'role', 'api_key', 'reset_token', 'reset_expires'];
 
-    protected $allowedFields    = ['name', 'email', 'password', 'api_key', 'reset_token', 'reset_expires'];
+    protected $allowedFields    = ['name', 'email', 'password', 'api_key', 'reset_token', 'reset_expires', 'is_active'];
 
 
     // Dates

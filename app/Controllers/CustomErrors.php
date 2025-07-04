@@ -38,6 +38,15 @@ class CustomErrors extends Controller
             // Kembalikan response sebagai JSON
             return $this->response->setJSON($responseData);
 
+        } elseif ($firstSegment === 'backend') {
+            $this->response->setStatusCode(ResponseInterface::HTTP_NOT_FOUND);
+            $menuModel = model('App\\Models\\MenuModel');
+            $data = [
+                'title' => '404 Not Found',
+                'message' => 'Maaf, halaman backend yang Anda cari tidak dapat ditemukan.',
+                'menu_sidebar' => $menuModel->generateTree(),
+            ];
+            return view('errors/html/error_404_backend', $data);
         } else {
             
             $this->response->setStatusCode(ResponseInterface::HTTP_NOT_FOUND);

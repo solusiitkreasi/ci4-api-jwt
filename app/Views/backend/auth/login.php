@@ -82,7 +82,7 @@
                                 <p class="h6">Please use your credentials to login.</p>
                                 <p class="h6">
                                     If you are not a member, please
-                                    <a href="#" style="text-decoration:underline;">register</a>
+                                    <a href="/register" style="text-decoration:underline;">register</a>
                                 </p>
                             </div>
 
@@ -92,6 +92,12 @@
                             <?php if(session()->get('error')): ?>
                                 <div class="alert alert-danger" role="alert">
                                     <?= session()->get('error') ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if(session()->get('success')): ?>
+                                <div class="alert alert-success" role="alert">
+                                    <?= session()->get('success') ?>
                                 </div>
                             <?php endif; ?>
 
@@ -108,7 +114,13 @@
                                         <i class="fa fa-eye" onclick="showPass()" id="eye" title="Show Password"></i>
                                     </div>
                                     <button tabIndex="3" type="submit" class="btn btn-lg btn-primary mr-2">Login</button>
-                                    <a class="text-medium t-3 e-3" type="button" style="text-decoration:underline;" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#staticBackdropExample">Forgot Password?</a>
+                                    <!-- <a class="text-medium t-3 e-3" type="button" style="text-decoration:underline;" type="button" class="btn btn-outline-primary" 
+                                            data-bs-toggle="modal" data-bs-target="#staticBackdropExample">
+                                        Forgot Password?
+                                    </a> -->
+                                    <a class="text-medium t-3 e-3" href="/forgot_password" style="text-decoration:underline;" class="btn btn-outline-primary">
+                                        Forgot Password?
+                                    </a>
                                 </form>
                             </div>
                         </div>

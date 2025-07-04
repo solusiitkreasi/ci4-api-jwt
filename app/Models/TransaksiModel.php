@@ -106,4 +106,6 @@ class TransaksiModel extends Model
     // {
     //     return $this->hasMany(LogHistoryTransaksiModel::class, 'transaction_id');
     // }
+
+
 }

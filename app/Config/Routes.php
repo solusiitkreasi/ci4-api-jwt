@@ -21,6 +21,11 @@ $routes->group('api/v1', function ($routes) {
         $routes->post('forgot-password', 'AuthController::forgotPassword');
         $routes->post('reset-password', 'AuthController::resetPassword'); // Biasanya ada token di URL atau body
         $routes->post('logout', 'AuthController::logout', ['filter' => 'jwtAuth']);
+
+        $routes->post('forgot-password-mail', 'AuthController::forgotPasswordMail');
+        $routes->post('reset-password-mail', 'AuthController::resetPasswordMail');
+        $routes->post('register-mail', 'AuthController::registerMail');
+        $routes->get('activate', 'AuthController::activateAccount');
     });
 
     // Public Data (Produk & Kategori) - Menggunakan API Key
@@ -173,7 +178,6 @@ $routes->group('api/v1', function ($routes) {
 
 });
 
-
 // =================================================================
 // WEB ROUTES (STATEFUL - SESSION AUTH)
 // =================================================================
@@ -183,21 +187,67 @@ $routes->get('/login', 'Backend\AuthController::loginView');
 $routes->post('/login', 'Backend\AuthController::loginAction');
 $routes->get('/logout', 'Backend\AuthController::logout');
 
+$routes->get('/forgot_password', 'Backend\AuthController::forgotView');
+$routes->post('/forgot_password', 'Backend\AuthController::forgotAction');
+$routes->get('/reset_password', 'Backend\AuthController::resetView');
+$routes->post('/reset_password', 'Backend\AuthController::resetAction');
+
+// Halaman dan Proses Registrasi
+$routes->get('/register', 'Backend\AuthController::registerView');
+$routes->post('/register', 'Backend\AuthController::registerAction');
+$routes->get('/activate', 'Backend\AuthController::activateAccount');
+
+
+
 // Grup untuk semua halaman admin yang terproteksi
 $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' => 'adminAuth'], function ($routes) {
     $routes->get('/', 'DashboardController::index');
     $routes->get('dashboard', 'DashboardController::index');
 
+    // Ganti Password
+    $routes->get('change_password', 'AuthController::changePasswordView');
+    $routes->post('change_password', 'AuthController::changePasswordAction');
+
+
     // Rute untuk manajemen transaksi
-    $routes->get('transaksi', 'TransaksiController::index');
-    $routes->get('transaksi/detail/(:any)', 'TransaksiController::detail/$1');
-    $routes->post('transaksi/update_status', 'TransaksiController::updateStatus');
+    $routes->group('transaksi', function($routes) {
+        $routes->get('/', 'TransaksiController::index');
+        $routes->get('detail/(:any)', 'TransaksiController::detail/$1');
+        $routes->post('update_status', 'TransaksiController::updateStatus');
+        $routes->get('datatables', 'TransaksiController::datatables');
+        $routes->get('export_csv', 'TransaksiController::exportCsv');
+        $routes->get('export_excel', 'TransaksiController::exportExcel');
+    });
+    
     
     // Rute untuk manajemen pengguna
     $routes->get('users', 'UserController::index');
 
-});
+    // Role Management
+    $routes->group('role', function($routes) {
+        $routes->get('/', 'RoleController::index');
+        $routes->get('create', 'RoleController::create');
+        $routes->post('create', 'RoleController::create');
+        $routes->get('edit/(:num)', 'RoleController::edit/$1');
+        $routes->post('edit/(:num)', 'RoleController::edit/$1');
+        $routes->get('delete/(:num)', 'RoleController::delete/$1');
+        $routes->get('permissions/(:num)', 'RoleController::permissions/$1');
+        $routes->post('permissions/(:num)', 'RoleController::permissions/$1');
+        $routes->get('datatables', 'RoleController::datatables');
+    });
 
+    // Permission Management
+    $routes->group('permission', function($routes) {
+        $routes->get('/', 'PermissionController::index');
+        $routes->get('create', 'PermissionController::create');
+        $routes->post('create', 'PermissionController::create');
+        $routes->get('edit/(:num)', 'PermissionController::edit/$1');
+        $routes->post('edit/(:num)', 'PermissionController::edit/$1');
+        $routes->get('delete/(:num)', 'PermissionController::delete/$1');
+        $routes->get('datatables', 'PermissionController::datatables');
+    });
+
+});
 
 // Fallback untuk route tidak ditemukan (404 Not Found)
 $routes->set404Override('App\Controllers\CustomErrors::show404');

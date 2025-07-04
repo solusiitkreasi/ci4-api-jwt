@@ -12,35 +12,25 @@ class PermissionFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        helper('response'); // Pastikan helper response termuat
-        $authenticatedUser = $request->user ?? Services::getSharedInstance('user');
-
-        if (!$authenticatedUser || !isset($authenticatedUser->id)) {
-            // Ini seharusnya sudah ditangani oleh JWTAuthFilter
-            return api_error('User not authenticated.', ResponseInterface::HTTP_UNAUTHORIZED);
+        $session = session();
+        $userId = $session->get('user_id');
+        $roleId = $session->get('role_id');
+        if (!$userId || !$roleId) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
-
-        if (empty($arguments)) {
-            // Jika tidak ada argumen permission, berarti hanya butuh login (sudah dicek JWTAuthFilter)
-            return $request; // Loloskan jika tidak ada permission spesifik yang diminta
+        $uri = service('uri');
+        $seg2 = $uri->getSegment(2);
+        $seg3 = $uri->getSegment(3);
+        $link = $seg3 ? strtolower($seg2.'/'.$seg3) : strtolower($seg2);
+        $db = \Config\Database::connect();
+        $hasAccess = $db->table('role_permissions rp')
+            ->join('permissions p', 'p.id = rp.permission_id')
+            ->where('rp.role_id', $roleId)
+            ->where('p.link', $link)
+            ->countAllResults() > 0;
+        if (!$hasAccess) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
-
-        $userModel = new UserModel();
-        // Cek apakah user memiliki SEMUA permission yang dibutuhkan (AND logic)
-        // Atau ANY permission (OR logic), tergantung kebutuhan. Di sini kita pakai AND.
-        $requiredPermissions = is_array($arguments) ? $arguments : [$arguments];
-        
-        foreach ($requiredPermissions as $permSlug) {
-            if (!$userModel->hasPermission($authenticatedUser->id, (string)$permSlug)) {
-                log_message('notice', "User ID {$authenticatedUser->id} denied access. Missing permission: {$permSlug}");
-                return api_error(
-                    "Access denied. You do not have the required permission ({$permSlug}).",
-                    ResponseInterface::HTTP_FORBIDDEN
-                );
-            }
-        }
-        
-        return $request; // User memiliki semua permission yang dibutuhkan
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)

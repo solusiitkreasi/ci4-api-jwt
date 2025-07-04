@@ -9,6 +9,7 @@ use App\Models\LogHistoryTransaksiModel;
 use CodeIgniter\API\ResponseTrait;
 use Config\Services; // Untuk mengambil data user dari filter JWT
 use Ramsey\Uuid\Uuid;
+use App\Services\TransactionService;
 
 class TransaksiController extends BaseController
 {
@@ -17,6 +18,7 @@ class TransaksiController extends BaseController
     protected $transaksiJasaModel;
     protected $logHistoryModel;
     protected $currentUser;
+    protected $transactionService;
 
     public function __construct()
     {
@@ -24,6 +26,7 @@ class TransaksiController extends BaseController
         $this->transaksiModel           = new TransaksiModel();
         $this->transaksiJasaModel       = new TransaksiJasaModel();
         $this->logHistoryModel          = new LogHistoryTransaksiModel();
+        $this->transactionService       = new TransactionService();
         helper(['response', 'text']); // 'text' untuk random_string
         
         // Mengambil user yang sudah diautentikasi oleh JWTAuthFilter
@@ -90,7 +93,12 @@ class TransaksiController extends BaseController
                                 WHERE kode_jasa="'.$jasa_id.'" AND aktif=1');
             $getJasaNama = $sql->getRow();
             
-            $jasa['nama_jasa'] = $getJasaNama->nama_jasa;
+            if($getJasaNama){
+                $jasa['nama_jasa'] = $getJasaNama->nama_jasa;
+            }else{
+                $jasa['nama_jasa'] = 'Kode Jasa Not Found, Pastikan Kode Jasa sesuai dengan data master jasa!!';
+            }
+            
         }
         
         $data['transaksi']  = $transaksi;
@@ -202,8 +210,6 @@ class TransaksiController extends BaseController
 
         try {
             
-            
-
             // ✅ GENERATE UUID untuk ID Transaksi
             // SEBELUM: $transactionId = Uuid::uuid4()->toString();
             // Menghasilkan: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" (36 karakter)
@@ -367,37 +373,86 @@ class TransaksiController extends BaseController
             ];
 
             // Merger Data Array
-            $transaksiData = array_merge($trnAwal, $lensaR, $lensaL,$trnFoot, $trnAkhir);
-
+            $transaksiData = array_merge($trnAwal,$lensaR,$lensaL,$trnFoot,$trnAkhir);
+            
             // Insert Data
-            $transaksiId = $this->transaksiModel->insert($transaksiData);
+            // $transaksiId = $this->transaksiModel->insert($transaksiData);
+
+            $transaksiId = $this->transactionService->createTransaction($transaksiData);
 
             // Cek Insert False
             if (!$transaksiId) {
                 $db->transRollback();
-                return api_error('Failed to create transaksi.', 500, $this->transaksiModel->errors());
+                return api_error('Failed to create transaksi. call tol it support', 500);
             }
 
-            
+            // tesx($transaksiId, $transaksiData);
 
             if($data_jasa){
                 // Simpan ke tabel 'jasa_data'
                 $trnJasaData = [];
                 foreach ($data_jasa as $jasa) {
+
+                    // Tambahan Untuk Pengecekan Qty Pada Jasa
+                    if($data_lensa->hanya_jasa == '1'){
+
+                        if (!isset($jasa->jasa_qty)){
+                            $list_qtyjasa=[
+                                'kode_jasa' => $jasa->jasa_id,
+                                'detail'    => 'Parameter Qty Jasa tidak ada, silahkan tambahkan, untuk input manual Minimal 1 dan Max 2'
+                            ];
+                            $db->transRollback();
+                            return api_error('Failed to save jasa details.', 404, $list_qtyjasa);
+                            
+                        }
+
+                        $qty_jasa = $jasa->jasa_qty; // Input Manual
+
+                        if($qty_jasa >= 1 && $qty_jasa <= 2){ 
+                        }else{
+                            $list_qtyjasa=[
+                                'kode_jasa' => $jasa->jasa_id,
+                                'detail'    => 'Qty Minimal 1 dan Max 2'
+                            ];
+                            $db->transRollback();
+                            return api_error('Failed to save jasa details.', 404, $list_qtyjasa);
+                        }
+
+                    } else {
+                        $qty_jasa = $totalLensa;
+                    }
+
                     $trnJasaData[] = [
                         // 'id' akan diisi setelah transaksi utama dibuat
                         'id'                 => $transaksiId,
                         'jasa_id'            => $jasa->jasa_id,
-                        'qty'                => $totalLensa,
+                        'qty'                => $qty_jasa,
                     ];
+
+                    $db_jasa     = \Config\Database::connect('db_tol');
+                    $sql        = $db_jasa->query('SELECT kode_jasa, nama_jasa FROM db_tol.mst_jjasa 
+                                        WHERE kode_jasa="'.$jasa->jasa_id.'" AND aktif=1');
+                    $getJasaNama = $sql->getRow();
+
+                    if(!$getJasaNama){
+                        $list_jasa=[
+                            'kode_jasa' => $jasa->jasa_id,
+                            'detail'    => 'Kode jasa not found, pastikan kode jasa sesuai dengan data master jasa !!'
+                        ];
+
+                        $db->transRollback();
+                        return api_error('Failed to save jasa details.', 404, $list_jasa);
+                    }
+                    
                 }
 
-                if (!$this->transaksiJasaModel->insertBatch($trnJasaData)) {
+                $insert_jasa = $this->transaksiJasaModel->insertBatch($trnJasaData);
+
+                if (!$insert_jasa) {
                     $db->transRollback();
                     return api_error('Failed to save jasa details.', 500, $this->transaksiJasaModel->errors());
                 }
             }else{
-
 
                 if($data_lensa->hanya_jasa == '1'){
                     $db->transRollback();
