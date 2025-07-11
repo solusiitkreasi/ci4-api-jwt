@@ -42,11 +42,12 @@ class TransaksiController extends BaseController
         $model      = new TransaksiWebModel();
         $userModel  = new UserModel();
         
+        // Kolom harus sesuai urutan datatables (No, No PO, Nama Klien, wkt_input, Status, Aksi)
         $columns = [
-            null, 
+            null, // No (nomor urut, tidak digunakan untuk order)
             'no_po',
             'customer_name',
-            'wkt_input',
+            'wkt_input', // kolom ke-3 (index 3) untuk sorting tanggal
             'is_proses_tol',
             'transaction_pr_h_apis.id',
         ];
@@ -55,9 +56,16 @@ class TransaksiController extends BaseController
         $start          = (int) $request->getGet('start');
         $length         = (int) $request->getGet('length');
         $search         = $request->getGet('search')['value'] ?? '';
-        $orderColIdx    = (int) ($request->getGet('order')[0]['column'] ?? 3);
+        $orderColIdx    = (int) $request->getGet('order')[0]['column'] ?? 3;
         $orderCol       = $columns[$orderColIdx] ?? 'wkt_input';
-        $orderDir       = $request->getGet('order')[0]['dir'] ?? 'desc';
+
+        if ($orderCol === null) $orderCol = 'wkt_input';
+        $orderDir = $request->getGet('order')[0]['dir'] ?? 'desc';
+        // Paksa order default jika tidak ada order dari datatables
+        if (!$request->getGet('order')) {
+            $orderCol = 'wkt_input';
+            $orderDir = 'desc';
+        }
 
         $pic_input = session()->get('user_id');
 
@@ -82,19 +90,17 @@ class TransaksiController extends BaseController
             } else {
                 $builder->where('pic_input', $pic_input);
             }
+        }else if (in_array('Super Admin', $filterRole)) {
+            
         } else {
             $builder->where('pic_input', $pic_input);
         }
 
-
-        if ($search) {
-            $builder->groupStart()
-                ->like('no_po', $search)
-                ->orLike('users.name', $search)
-                ->orLike('transaction_pr_h_apis.is_proses_tol', $search)
-                ->groupEnd();
+        // Filter by customer_id (kode_customer)
+        $filterCustomer = $request->getGet('filter_customer');
+        if ($filterCustomer) {
+            $builder->where('transaction_pr_h_apis.customer_id', $filterCustomer);
         }
-
         // Filter by status (is_proses_tol)
         $filterStatus = $request->getGet('filter_status');
         if ($filterStatus !== null && $filterStatus !== '') {
@@ -117,15 +123,25 @@ class TransaksiController extends BaseController
             }
         }
 
+        // Total sebelum filter
         $totalRecords = $model->countAllResults(false);
 
+        // Filter pencarian
+        if ($search) {
+            $builder->groupStart()
+                ->like('no_po', $search)
+                ->orLike('users.name', $search)
+                ->orLike('transaction_pr_h_apis.is_proses_tol', $search)
+                ->groupEnd();
+        }
+
+        // Total setelah filter
         $recordsFiltered = $builder->countAllResults(false);
 
         $builder->orderBy($orderCol, $orderDir);
-        if($length !== -1){
-            $builder->limit($length, $start);
-        }
+        $builder->limit($length, $start);
         $data = $builder->get()->getResultArray();
+        
 
         $resultData = [];
         foreach($data as $row){
