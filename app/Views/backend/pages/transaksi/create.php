@@ -380,247 +380,251 @@ helper(['model_helper', 'lensa_helper']);
 
 <!-- Modal Pilih Lensa -->
 <div class="modal fade" id="lensaModal" tabindex="-1" aria-labelledby="lensaModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="lensaModalLabel">Pilih Lensa</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-2" id="searchLensa" placeholder="Cari kode/nama lensa..." onkeyup="filterLensaTable()">
+                <div class="table-responsive" style="max-height:400px;overflow:auto;">
+                    <table class="table table-bordered table-hover" id="lensaTable">
+                        <thead><tr><th>Kode Lensa</th><th>Nama Lensa</th><th></th></tr></thead>
+                            <tbody>
+                                <?php foreach(get_lensa_master_backend() as $lensa): ?>
+                                <tr>
+                                    <td><?= esc($lensa->kode_lensa) ?></td>
+                                    <td><?= esc($lensa->nama_lensa) ?></td>
+                                    <td><button type="button" class="btn btn-sm btn-success" onclick="selectLensa('<?= esc($lensa->kode_lensa) ?>','<?= esc(addslashes($lensa->nama_lensa)) ?>')">Pilih</button></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+            
+<!-- Modal Notifikasi Qty Jasa -->
+<div class="modal fade" id="qtyJasaNotifModal" tabindex="-1" aria-labelledby="qtyJasaNotifModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="lensaModalLabel">Pilih Lensa</h5>
+        <div class="modal-header">
+        <h5 class="modal-title" id="qtyJasaNotifModalLabel">Peringatan</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <input type="text" class="form-control mb-2" id="searchLensa" placeholder="Cari kode/nama lensa..." onkeyup="filterLensaTable()">
-        <div class="table-responsive" style="max-height:400px;overflow:auto;">
-          <table class="table table-bordered table-hover" id="lensaTable">
-            <thead><tr><th>Kode Lensa</th><th>Nama Lensa</th><th></th></tr></thead>
-            <tbody>
-            <?php foreach(get_lensa_master_backend() as $lensa): ?>
-              <tr>
-                <td><?= esc($lensa->kode_lensa) ?></td>
-                <td><?= esc($lensa->nama_lensa) ?></td>
-                <td><button type="button" class="btn btn-sm btn-success" onclick="selectLensa('<?= esc($lensa->kode_lensa) ?>','<?= esc(addslashes($lensa->nama_lensa)) ?>')">Pilih</button></td>
-                          </tr>
-                        <?php endforeach; ?>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Modal Notifikasi Qty Jasa -->
-            <div class="modal fade" id="qtyJasaNotifModal" tabindex="-1" aria-labelledby="qtyJasaNotifModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="qtyJasaNotifModalLabel">Peringatan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body" id="qtyJasaNotifMsg">
-                    Qty jasa hanya boleh 1 atau 2!
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <script>
-            let jasaIdx = 1;
-            function addJasa() {
-                const jasaList = document.getElementById('jasa-list');
-                const idx = jasaList.children.length;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td><input type="text" class="form-control" name="data_jasa[${idx}][jasa_id]" id="jasa_id_${idx}" placeholder="Kode Jasa" readonly></td>
-                    <td><input type="text" class="form-control" name="data_jasa[${idx}][jasa_nama]" id="jasa_nama_${idx}" placeholder="Nama Jasa" readonly></td>
-                    <td><input type="number" class="form-control" name="data_jasa[${idx}][jasa_qty]" placeholder="Qty Jasa" style="max-width:70px;"></td>
-                    <td><div class='d-flex flex-row gap-1 justify-content-center'><button type="button" class="btn btn-outline-primary btn-sm" onclick="openJasaModal(${idx})">Pilih</button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove();updateJasaActionButtons();">Hapus</button></div></td>`;
-                jasaList.appendChild(tr);
-                updateJasaQtyFields();
-                updateJasaActionButtons(); // <-- update tombol setelah tambah baris
-            }
-            function openJasaModal(idx) {
-                jasaTargetIdx = idx;
-                var modal = new bootstrap.Modal(document.getElementById('jasaModal'));
-                modal.show();
-            }
-            function selectJasa(kode, nama) {
-                document.getElementById('jasa_id_' + jasaTargetIdx).value = kode;
-                document.getElementById('jasa_nama_' + jasaTargetIdx).value = nama;
-                bootstrap.Modal.getInstance(document.getElementById('jasaModal')).hide();
-            }
-            function updateNamaLensa(kodeId, namaId) {
-                // Optional: bisa diisi jika ingin update nama otomatis saat input kode manual
-            }
-            function filterJasaTable() {
-                var input = document.getElementById('searchJasa');
-                var filter = input.value.toUpperCase();
-                var table = document.getElementById('jasaTable');
-                var tr = table.getElementsByTagName('tr');
-                for (var i = 1; i < tr.length; i++) {
-                    var tdKode = tr[i].getElementsByTagName('td')[0];
-                    var tdNama = tr[i].getElementsByTagName('td')[1];
-                    if (tdKode && tdNama) {
-                        var kode = tdKode.textContent || tdKode.innerText;
-                        var nama = tdNama.textContent || tdNama.innerText;
-                        if (kode.toUpperCase().indexOf(filter) > -1 || nama.toUpperCase().indexOf(filter) > -1) {
-                            tr[i].style.display = '';
-                        } else {
-                            tr[i].style.display = 'none';
-                        }
+        </div>
+        <div class="modal-body" id="qtyJasaNotifMsg">
+        Qty jasa hanya boleh 1 atau 2!
+        </div>
+        <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
+    </div>
+    </div>
+</div>
+
+
+    <script>
+        let jasaIdx = 1;
+        function addJasa() {
+            const jasaList = document.getElementById('jasa-list');
+            const idx = jasaList.children.length;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="text" class="form-control" name="data_jasa[${idx}][jasa_id]" id="jasa_id_${idx}" placeholder="Kode Jasa" readonly></td>
+                <td><input type="text" class="form-control" name="data_jasa[${idx}][jasa_nama]" id="jasa_nama_${idx}" placeholder="Nama Jasa" readonly></td>
+                <td><input type="number" class="form-control" name="data_jasa[${idx}][jasa_qty]" placeholder="Qty Jasa" style="max-width:70px;"></td>
+                <td><div class='d-flex flex-row gap-1 justify-content-center'><button type="button" class="btn btn-outline-primary btn-sm" onclick="openJasaModal(${idx})">Pilih</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove();updateJasaActionButtons();">Hapus</button></div></td>`;
+            jasaList.appendChild(tr);
+            updateJasaQtyFields();
+            updateJasaActionButtons(); // <-- update tombol setelah tambah baris
+        }
+        function openJasaModal(idx) {
+            jasaTargetIdx = idx;
+            var modal = new bootstrap.Modal(document.getElementById('jasaModal'));
+            modal.show();
+        }
+        function selectJasa(kode, nama) {
+            document.getElementById('jasa_id_' + jasaTargetIdx).value = kode;
+            document.getElementById('jasa_nama_' + jasaTargetIdx).value = nama;
+            bootstrap.Modal.getInstance(document.getElementById('jasaModal')).hide();
+        }
+        function updateNamaLensa(kodeId, namaId) {
+            // Optional: bisa diisi jika ingin update nama otomatis saat input kode manual
+        }
+        function filterJasaTable() {
+            var input = document.getElementById('searchJasa');
+            var filter = input.value.toUpperCase();
+            var table = document.getElementById('jasaTable');
+            var tr = table.getElementsByTagName('tr');
+            for (var i = 1; i < tr.length; i++) {
+                var tdKode = tr[i].getElementsByTagName('td')[0];
+                var tdNama = tr[i].getElementsByTagName('td')[1];
+                if (tdKode && tdNama) {
+                    var kode = tdKode.textContent || tdKode.innerText;
+                    var nama = tdNama.textContent || tdNama.innerText;
+                    if (kode.toUpperCase().indexOf(filter) > -1 || nama.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = '';
+                    } else {
+                        tr[i].style.display = 'none';
                     }
                 }
             }
+        }
 
-            // --- FIX: Modal Lensa ---
-            let lensaTargetKodeId = null;
-            let lensaTargetNamaId = null;
-            function openLensaModal(kodeId, namaId) {
-                lensaTargetKodeId = kodeId;
-                lensaTargetNamaId = namaId;
-                var modal = new bootstrap.Modal(document.getElementById('lensaModal'));
-                modal.show();
+        // --- FIX: Modal Lensa ---
+        let lensaTargetKodeId = null;
+        let lensaTargetNamaId = null;
+        function openLensaModal(kodeId, namaId) {
+            lensaTargetKodeId = kodeId;
+            lensaTargetNamaId = namaId;
+            var modal = new bootstrap.Modal(document.getElementById('lensaModal'));
+            modal.show();
+        }
+        function selectLensa(kode, nama) {
+            if (lensaTargetKodeId && lensaTargetNamaId) {
+                document.getElementById(lensaTargetKodeId).value = kode;
+                document.getElementById(lensaTargetNamaId).value = nama;
+                // Trigger event agar update qty jasa otomatis
+                document.getElementById(lensaTargetKodeId).dispatchEvent(new Event('input'));
             }
-            function selectLensa(kode, nama) {
-                if (lensaTargetKodeId && lensaTargetNamaId) {
-                    document.getElementById(lensaTargetKodeId).value = kode;
-                    document.getElementById(lensaTargetNamaId).value = nama;
-                    // Trigger event agar update qty jasa otomatis
-                    document.getElementById(lensaTargetKodeId).dispatchEvent(new Event('input'));
-                }
-                bootstrap.Modal.getInstance(document.getElementById('lensaModal')).hide();
-            }
-            // --- END FIX ---
+            bootstrap.Modal.getInstance(document.getElementById('lensaModal')).hide();
+        }
+        // --- END FIX ---
 
-            function updateTotalPdfPdn() {
-                let pdfR = parseFloat(document.querySelector('[name="data_lensa[r_pdf]"]').value) || 0;
-                let pdfL = parseFloat(document.querySelector('[name="data_lensa[l_pdf]"]').value) || 0;
-                let pdnR = parseFloat(document.querySelector('[name="data_lensa[r_pdn]"]').value) || 0;
-                let pdnL = parseFloat(document.querySelector('[name="data_lensa[l_pdn]"]').value) || 0;
-                document.getElementById('total_pdf').innerText = pdfR + pdfL;
-                document.getElementById('total_pdn').innerText = pdnR + pdnL;
-            }
-            document.querySelector('[name="data_lensa[r_pdf]"]').addEventListener('input', updateTotalPdfPdn);
-            document.querySelector('[name="data_lensa[l_pdf]"]').addEventListener('input', updateTotalPdfPdn);
-            document.querySelector('[name="data_lensa[r_pdn]"]').addEventListener('input', updateTotalPdfPdn);
-            document.querySelector('[name="data_lensa[l_pdn]"]').addEventListener('input', updateTotalPdfPdn);
-            // Inisialisasi awal
+        function updateTotalPdfPdn() {
+            let pdfR = parseFloat(document.querySelector('[name="data_lensa[r_pdf]"]').value) || 0;
+            let pdfL = parseFloat(document.querySelector('[name="data_lensa[l_pdf]"]').value) || 0;
+            let pdnR = parseFloat(document.querySelector('[name="data_lensa[r_pdn]"]').value) || 0;
+            let pdnL = parseFloat(document.querySelector('[name="data_lensa[l_pdn]"]').value) || 0;
+            document.getElementById('total_pdf').innerText = pdfR + pdfL;
+            document.getElementById('total_pdn').innerText = pdnR + pdnL;
+        }
+        document.querySelector('[name="data_lensa[r_pdf]"]').addEventListener('input', updateTotalPdfPdn);
+        document.querySelector('[name="data_lensa[l_pdf]"]').addEventListener('input', updateTotalPdfPdn);
+        document.querySelector('[name="data_lensa[r_pdn]"]').addEventListener('input', updateTotalPdfPdn);
+        document.querySelector('[name="data_lensa[l_pdn]"]').addEventListener('input', updateTotalPdfPdn);
+        // Inisialisasi awal
+        updateTotalPdfPdn();
+
+        function clearLensa(kodeId, namaId) {
+            // Hapus semua input di baris yang sama (R atau L)
+            const row = kodeId.startsWith('r_') ? 'r_' : 'l_';
+            const fields = [
+                row + 'lensa', row + 'nama_lensa', row + 'spheris', row + 'cylinder', row + 'axis', row + 'additional',
+                row + 'pdf', row + 'pdn', row + 'prisma', row + 'base', row + 'prisma2', row + 'base2', row + 'base_curve', row + 'edge_thickness'
+            ];
+            fields.forEach(function(fid) {
+                var el = document.getElementById(fid);
+                if (el) el.value = '';
+            });
             updateTotalPdfPdn();
+            updateJasaQtyFields();
+            updateJasaActionButtons(); // <-- update tombol setelah clear lensa
+        }
 
-            function clearLensa(kodeId, namaId) {
-                // Hapus semua input di baris yang sama (R atau L)
-                const row = kodeId.startsWith('r_') ? 'r_' : 'l_';
-                const fields = [
-                    row + 'lensa', row + 'nama_lensa', row + 'spheris', row + 'cylinder', row + 'axis', row + 'additional',
-                    row + 'pdf', row + 'pdn', row + 'prisma', row + 'base', row + 'prisma2', row + 'base2', row + 'base_curve', row + 'edge_thickness'
-                ];
-                fields.forEach(function(fid) {
-                    var el = document.getElementById(fid);
-                    if (el) el.value = '';
-                });
-                updateTotalPdfPdn();
-                updateJasaQtyFields();
-                updateJasaActionButtons(); // <-- update tombol setelah clear lensa
-            }
-
-            function toggleLensaFields() {
-                var hanyaJasa = document.getElementById('hanya_jasa').value;
-                var lensaFields = document.querySelectorAll('#lensa-table input, #lensa-table button');
-                lensaFields.forEach(function(el) {
-                    if (hanyaJasa === '1') {
-                        el.setAttribute('disabled', 'disabled');
-                    } else {
-                        el.removeAttribute('disabled');
-                    }
-                });
-            }
-            document.addEventListener('DOMContentLoaded', function() {
-                toggleLensaFields();
-            });
-            function getLensaCount() {
-                let count = 0;
-                if (document.getElementById('r_lensa') && document.getElementById('r_lensa').value) count++;
-                if (document.getElementById('l_lensa') && document.getElementById('l_lensa').value) count++;
-                return count;
-            }
-            // --- Perbaiki logic qty jasa agar disabled jika belum pilih lensa (hanya jasa=0) ---
-            function updateJasaQtyFields() {
-                var hanyaJasa = document.getElementById('hanya_jasa').value;
-                var jasaRows = document.querySelectorAll('#jasa-list tr');
-                var lensaCount = getLensaCount();
-                jasaRows.forEach(function(row) {
-                    var qtyInput = row.querySelector('input[name*="[jasa_qty]"]');
-                    if (!qtyInput) return;
-                    if (hanyaJasa === '1') {
-                        qtyInput.removeAttribute('readonly');
-                        qtyInput.removeAttribute('disabled');
-                        qtyInput.value = '';
-                    } else {
-                        qtyInput.setAttribute('readonly', 'readonly');
-                        if (lensaCount === 0) {
-                            qtyInput.value = '';
-                            qtyInput.setAttribute('disabled', 'disabled');
-                        } else {
-                            qtyInput.value = lensaCount;
-                            qtyInput.removeAttribute('disabled');
-                        }
-                    }
-                });
-            }
-            // --- END PERBAIKI ---
-            document.getElementById('hanya_jasa').addEventListener('change', updateJasaQtyFields);
-            document.getElementById('r_lensa').addEventListener('input', updateJasaQtyFields);
-            document.getElementById('l_lensa').addEventListener('input', updateJasaQtyFields);
-            function showQtyJasaNotif(msg) {
-                document.getElementById('qtyJasaNotifMsg').innerText = msg || 'Qty jasa hanya boleh 1 atau 2!';
-                var modal = new bootstrap.Modal(document.getElementById('qtyJasaNotifModal'));
-                modal.show();
-            }
-            function validateJasaQty(input) {
-                var hanyaJasa = document.getElementById('hanya_jasa').value;
+        function toggleLensaFields() {
+            var hanyaJasa = document.getElementById('hanya_jasa').value;
+            var lensaFields = document.querySelectorAll('#lensa-table input, #lensa-table button');
+            lensaFields.forEach(function(el) {
                 if (hanyaJasa === '1') {
-                    var val = parseInt(input.value, 10);
-                    if (val < 1 || val > 2) {
-                        showQtyJasaNotif('Qty jasa hanya boleh 1 atau 2!');
-                        input.value = '';
-                    }
-                }
-            }
-            document.addEventListener('input', function(e) {
-                if (e.target && e.target.name && e.target.name.includes('[jasa_qty]')) {
-                    validateJasaQty(e.target);
-                }
-            });
-            document.addEventListener('DOMContentLoaded', function() {
-                updateJasaQtyFields();
-            });
-            function updateJasaActionButtons() {
-                var hanyaJasa = document.getElementById('hanya_jasa').value;
-                var lensaCount = getLensaCount();
-                var jasaRows = document.querySelectorAll('#jasa-list tr');
-                // Tombol 'Tambah Jasa'
-                var btnTambahJasa = document.querySelector('button[onclick="addJasa()"]');
-                if (hanyaJasa === '0' && lensaCount === 0) {
-                    if (btnTambahJasa) btnTambahJasa.setAttribute('disabled', 'disabled');
+                    el.setAttribute('disabled', 'disabled');
                 } else {
-                    if (btnTambahJasa) btnTambahJasa.removeAttribute('disabled');
+                    el.removeAttribute('disabled');
                 }
-                // Tombol 'Pilih Jasa' di setiap baris
-                jasaRows.forEach(function(row) {
-                    var btnPilih = row.querySelector('button.btn-outline-primary');
-                    if (!btnPilih) return;
-                    if (hanyaJasa === '0' && lensaCount === 0) {
-                        btnPilih.setAttribute('disabled', 'disabled');
-                    } else {
-                        btnPilih.removeAttribute('disabled');
-                    }
-                });
-            }
-            // Panggil updateJasaActionButtons setiap perubahan lensa/hanya jasa
-            ['change','input'].forEach(function(ev){
-                document.getElementById('hanya_jasa').addEventListener(ev, function(){updateJasaActionButtons();});
-                document.getElementById('r_lensa').addEventListener(ev, function(){updateJasaActionButtons();});
-                document.getElementById('l_lensa').addEventListener(ev, function(){updateJasaActionButtons();});
             });
-            document.addEventListener('DOMContentLoaded', function() { updateJasaActionButtons(); });
-            </script>
-            <?= $this->endSection() ?>
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleLensaFields();
+        });
+        function getLensaCount() {
+            let count = 0;
+            if (document.getElementById('r_lensa') && document.getElementById('r_lensa').value) count++;
+            if (document.getElementById('l_lensa') && document.getElementById('l_lensa').value) count++;
+            return count;
+        }
+        // --- Perbaiki logic qty jasa agar disabled jika belum pilih lensa (hanya jasa=0) ---
+        function updateJasaQtyFields() {
+            var hanyaJasa = document.getElementById('hanya_jasa').value;
+            var jasaRows = document.querySelectorAll('#jasa-list tr');
+            var lensaCount = getLensaCount();
+            jasaRows.forEach(function(row) {
+                var qtyInput = row.querySelector('input[name*="[jasa_qty]"]');
+                if (!qtyInput) return;
+                if (hanyaJasa === '1') {
+                    qtyInput.removeAttribute('readonly');
+                    qtyInput.removeAttribute('disabled');
+                    qtyInput.value = '';
+                } else {
+                    qtyInput.setAttribute('readonly', 'readonly');
+                    if (lensaCount === 0) {
+                        qtyInput.value = '';
+                        qtyInput.setAttribute('disabled', 'disabled');
+                    } else {
+                        qtyInput.value = lensaCount;
+                        qtyInput.removeAttribute('disabled');
+                    }
+                }
+            });
+        }
+        // --- END PERBAIKI ---
+        document.getElementById('hanya_jasa').addEventListener('change', updateJasaQtyFields);
+        document.getElementById('r_lensa').addEventListener('input', updateJasaQtyFields);
+        document.getElementById('l_lensa').addEventListener('input', updateJasaQtyFields);
+        function showQtyJasaNotif(msg) {
+            document.getElementById('qtyJasaNotifMsg').innerText = msg || 'Qty jasa hanya boleh 1 atau 2!';
+            var modal = new bootstrap.Modal(document.getElementById('qtyJasaNotifModal'));
+            modal.show();
+        }
+        function validateJasaQty(input) {
+            var hanyaJasa = document.getElementById('hanya_jasa').value;
+            if (hanyaJasa === '1') {
+                var val = parseInt(input.value, 10);
+                if (val < 1 || val > 2) {
+                    showQtyJasaNotif('Qty jasa hanya boleh 1 atau 2!');
+                    input.value = '';
+                }
+            }
+        }
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.name && e.target.name.includes('[jasa_qty]')) {
+                validateJasaQty(e.target);
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            updateJasaQtyFields();
+        });
+        function updateJasaActionButtons() {
+            var hanyaJasa = document.getElementById('hanya_jasa').value;
+            var lensaCount = getLensaCount();
+            var jasaRows = document.querySelectorAll('#jasa-list tr');
+            // Tombol 'Tambah Jasa'
+            var btnTambahJasa = document.querySelector('button[onclick="addJasa()"]');
+            if (hanyaJasa === '0' && lensaCount === 0) {
+                if (btnTambahJasa) btnTambahJasa.setAttribute('disabled', 'disabled');
+            } else {
+                if (btnTambahJasa) btnTambahJasa.removeAttribute('disabled');
+            }
+            // Tombol 'Pilih Jasa' di setiap baris
+            jasaRows.forEach(function(row) {
+                var btnPilih = row.querySelector('button.btn-outline-primary');
+                if (!btnPilih) return;
+                if (hanyaJasa === '0' && lensaCount === 0) {
+                    btnPilih.setAttribute('disabled', 'disabled');
+                } else {
+                    btnPilih.removeAttribute('disabled');
+                }
+            });
+        }
+        // Panggil updateJasaActionButtons setiap perubahan lensa/hanya jasa
+        ['change','input'].forEach(function(ev){
+            document.getElementById('hanya_jasa').addEventListener(ev, function(){updateJasaActionButtons();});
+            document.getElementById('r_lensa').addEventListener(ev, function(){updateJasaActionButtons();});
+            document.getElementById('l_lensa').addEventListener(ev, function(){updateJasaActionButtons();});
+        });
+        document.addEventListener('DOMContentLoaded', function() { updateJasaActionButtons(); });
+    </script>
+<?= $this->endSection() ?>

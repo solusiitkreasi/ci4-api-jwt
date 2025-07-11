@@ -59,12 +59,33 @@ class TransaksiController extends BaseController
         $orderCol       = $columns[$orderColIdx] ?? 'wkt_input';
         $orderDir       = $request->getGet('order')[0]['dir'] ?? 'desc';
 
+        $pic_input = session()->get('user_id');
+
         $builder = $model->select('transaction_pr_h_apis.*, users.name as customer_name, users.kode_customer')
             ->join('users', 'users.id = transaction_pr_h_apis.pic_input', 'left');
 
         // Filtering logic here...
+        $getRole = $userModel->getRoles($pic_input);
+        $filterRole = array_column($getRole, 'name');
+        if (in_array('Store Pic', $filterRole)) {
+            $get_customers_data = $userModel->select('kode_group')->where('id', $pic_input)->first();
+            $get_group = $get_customers_data['kode_group'] ?? null;
+            if ($get_group) {
+                $db_store = \Config\Database::connect('db_tol');
+                $get_store = $db_store->query("SELECT customer_id FROM db_tol.mst_customer WHERE group_customer = ?", [$get_group])->getResult();
+                $storeIDArray = array_map(fn($row) => $row->customer_id, $get_store);
+                if (!empty($storeIDArray)) {
+                    $builder->whereIn('customer_id', $storeIDArray);
+                } else {
+                    $builder->where('pic_input', $pic_input); // Fallback jika grup tidak punya store
+                }
+            } else {
+                $builder->where('pic_input', $pic_input);
+            }
+        } else {
+            $builder->where('pic_input', $pic_input);
+        }
 
-        $totalRecords = $builder->countAllResults(false);
 
         if ($search) {
             $builder->groupStart()
@@ -73,6 +94,30 @@ class TransaksiController extends BaseController
                 ->orLike('transaction_pr_h_apis.is_proses_tol', $search)
                 ->groupEnd();
         }
+
+        // Filter by status (is_proses_tol)
+        $filterStatus = $request->getGet('filter_status');
+        if ($filterStatus !== null && $filterStatus !== '') {
+            $builder->where('transaction_pr_h_apis.is_proses_tol', $filterStatus);
+        }
+        // Filter by tanggal (range)
+        $filterDateFrom = $request->getGet('filter_date_from');
+        $filterDateTo   = $request->getGet('filter_date_to');
+        if ($filterDateFrom) {
+            // Format ke Y-m-d
+            $from = \DateTime::createFromFormat('d-m-Y', $filterDateFrom);
+            if ($from) {
+                $builder->where('DATE(wkt_input) >=', $from->format('Y-m-d'));
+            }
+        }
+        if ($filterDateTo) {
+            $to = \DateTime::createFromFormat('d-m-Y', $filterDateTo);
+            if ($to) {
+                $builder->where('DATE(wkt_input) <=', $to->format('Y-m-d'));
+            }
+        }
+
+        $totalRecords = $model->countAllResults(false);
 
         $recordsFiltered = $builder->countAllResults(false);
 
