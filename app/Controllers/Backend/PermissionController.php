@@ -35,10 +35,10 @@ class PermissionController extends BaseController
             $parent_link        = null;
             if ($isSub) {
                 $parent_id      = $data['parent_id'] ?? null;
-                $parent_link    = $this->service->getPermission($parent_id)['link'];
+                // $parent_link    = $this->service->getPermission($parent_id)['link'];
             } elseif ($isPermission) {
                 $parent_id      = $data['parent_id'] ?? null;
-                $parent_link    = $this->service->getPermission($parent_id)['link'];
+                // $parent_link    = $this->service->getPermission($parent_id)['link'];
             }
 
 

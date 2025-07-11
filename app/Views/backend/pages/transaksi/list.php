@@ -7,6 +7,9 @@
     <div class="card">
         <div class="card-body">
             <div class="row mb-3">
+                <?php  $filterRole = session()->get('roles');
+                if (is_array($filterRole) ? in_array('Super Admin', $filterRole) : $filterRole == 'Super Admin') { ?>
+                <!-- Tampilkan menu khusus Super Admin -->
                 <div class="col-md-3 mb-2">
                     <label for="filter-customer" class="form-label">Filter Customer</label>
                     <select id="filter-customer" class="form-select">
@@ -20,6 +23,8 @@
                         <?php endif; ?>
                     </select>
                 </div>
+                <?php } ?>
+
                 <div class="col-md-2 mb-2">
                     <label for="filter-status" class="form-label">Filter Status</label>
                     <select id="filter-status" class="form-select">
@@ -64,12 +69,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script>
         $(document).ready(function() {
             // Inisialisasi datepicker
@@ -89,12 +88,34 @@
                 ajax: {
                     url: '<?= base_url('backend/transaksi/datatables') ?>',
                     type: 'GET',
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        // Tangkap error AJAX di sini
+                        let errorMessage = 'Terjadi kesalahan saat memuat data.';
+                        if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                            errorMessage = jqXHR.responseJSON.message;
+                        } else if (jqXHR.responseText) {
+                            // Coba parse sebagai HTML jika response bukan JSON
+                            let errorText = $(jqXHR.responseText).find('h1').text();
+                            if(errorText) errorMessage = errorText;
+                        }
+
+                        // Tampilkan pesan di modal
+                        $('#errorModalBody').html(errorMessage);
+                        $('#errorModal').modal('show');
+
+                        // Kosongkan tabel untuk menunjukkan ada masalah
+                        $('#userTable_processing').hide();
+                        $('#userTable > tbody').html(
+                            '<tr><td colspan="6" class="text-center">' + errorMessage + '</td></tr>'
+                        );
+                    },
                     data: function(d) {
                         d.filter_customer = $('#filter-customer').val();
                         d.filter_status = $('#filter-status').val();
                         d.filter_date_from = $('#filter-date-from').val();
                         d.filter_date_to = $('#filter-date-to').val();
                     }
+
                 },
                 columns: [
                     { data: 0 }, // No

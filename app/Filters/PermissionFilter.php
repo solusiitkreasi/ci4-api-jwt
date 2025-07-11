@@ -18,6 +18,8 @@ class PermissionFilter implements FilterInterface
         if (!$userId || !$roleId) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
+        // Pastikan $roleId array (multi-role support)
+        $roleIds = is_array($roleId) ? $roleId : [$roleId];
         $uri = service('uri');
         $seg2 = $uri->getSegment(2);
         $seg3 = $uri->getSegment(3);
@@ -25,7 +27,7 @@ class PermissionFilter implements FilterInterface
         $db = \Config\Database::connect();
         $hasAccess = $db->table('role_permissions rp')
             ->join('permissions p', 'p.id = rp.permission_id')
-            ->where('rp.role_id', $roleId)
+            ->whereIn('rp.role_id', $roleIds)
             ->where('p.link', $link)
             ->countAllResults() > 0;
         if (!$hasAccess) {

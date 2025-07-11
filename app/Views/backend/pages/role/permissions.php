@@ -17,6 +17,7 @@
                 </div>
             <?php endif; ?>
             <form method="post" action="<?= base_url('backend/role/permissions/'.$role['id']) ?>">
+                <?= csrf_field() ?>
                 <div class="mb-2">
                     <input type="checkbox" id="checkAllMaster" class="form-check-input" style="margin-right:8px;">
                     <label for="checkAllMaster" style="font-weight:bold;cursor:pointer;">Check/Uncheck Semua Permission</label>

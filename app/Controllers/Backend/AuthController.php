@@ -29,11 +29,17 @@ class AuthController extends BaseController
 
         if($user) {
             $getRoles = $userModel->getRoles($user['id']);
+            $roleIds = array_column($getRoles, 'id');
+            $roleNames = array_column($getRoles, 'name');
         }
         
         // Cek user, password, dan permission
         if (!$user || !password_verify($password, $user['password'])) {
             return redirect()->back()->with('error', 'Email atau password salah.');
+        }
+
+        if (!$user['is_active']) {
+            return redirect()->back()->with('error', 'Akun anda belum aktif, silahkan hubungi pic.');
         }
 
         // Cek apakah user punya hak akses ke dashboard (misal, punya role 'Super Admin')
@@ -56,8 +62,8 @@ class AuthController extends BaseController
             'user_id'       => $user['id'],
             'name'          => $user['name'],
             'email'         => $user['email'],
-            'role_id'       => $getRoles[0]['id'],
-            'roles'         => $getRoles[0]['name'],
+            'role_id'       => $roleIds, // array semua role id
+            'roles'         => $roleNames, // array semua role name
             'is_logged_in'  => true
         ];
 
@@ -235,21 +241,44 @@ class AuthController extends BaseController
         if (session()->get('is_logged_in')) {
             return redirect()->to('/backend/dashboard');
         }
-        return view('backend/auth/register');
+
+        $db  = \Config\Database::connect('db_tol');
+
+        $get_mst_group_customer = $db->query("SELECT * FROM db_tol.mst_group_customer 
+                                    WHERE aktif = 1 
+                                    AND kode_group IS NOT NULL 
+                                    AND kode_group != '' 
+                                    ORDER BY nama_group ASC
+                                ")
+                                ->getResult();
+
+        $data['group_customer'] = $get_mst_group_customer;
+
+        // Jika ada old('group_store'), ambil customer sesuai group lama
+        $oldGroup = old('group_store');
+        if ($oldGroup) {
+            $get_mst_customer = $db->query("SELECT * FROM db_tol.mst_customer WHERE group_customer= ?", [$oldGroup])->getResult();
+            $data['customer'] = $get_mst_customer;
+        }
+
+        return view('backend/auth/register', $data);
     }
 
     public function registerAction()
     {
         $session = session();
         $userModel = new \App\Models\UserModel();
+        $roleModel = new \App\Models\RoleModel();
 
-        $name = $this->request->getPost('name');
-        $email = $this->request->getPost('email');
-        $password = $this->request->getPost('password');
-        $password_confirm = $this->request->getPost('password_confirm');
+        $group_store        = $this->request->getPost('group_store');
+        $store              = $this->request->getPost('store');
+        $name               = $this->request->getPost('name');
+        $email              = $this->request->getPost('email');
+        $password           = $this->request->getPost('password');
+        $password_confirm   = $this->request->getPost('password_confirm');
 
         // Validasi sederhana
-        if (!$name || !$email || !$password || !$password_confirm) {
+        if (!$group_store || !$store || !$name || !$email || !$password || !$password_confirm) {
             return redirect()->back()->withInput()->with('error', 'Semua field wajib diisi.');
         }
         if ($password !== $password_confirm) {
@@ -260,30 +289,48 @@ class AuthController extends BaseController
         }
 
         $userData = [
-            'name' => $name,
-            'email' => $email,
-            'password' => password_hash($password, PASSWORD_DEFAULT),
-            'is_active' => 0 // default belum aktif
+            'kode_group'    => $group_store,
+            'kode_customer' => $store,
+            'name'          => $name,
+            'email'         => $email,
+            'password'      => $password,
+            'is_active'     => 0 // default belum aktif
         ];
+
         $userModel->insert($userData);
         $userId = $userModel->getInsertID();
 
-        // Generate token aktivasi dan simpan ke tabel user_activations
-        $token = bin2hex(random_bytes(32));
-        $expiresAt = date('Y-m-d H:i:s', strtotime('+1 day'));
-        $activationModel = new \App\Models\UserActivationModel();
-        $activationModel->insert([
-            'user_id' => $userId,
-            'token' => $token,
-            'expires_at' => $expiresAt,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
+         // Assign default role 'Client'
+        $clientRole = $roleModel->where('name', 'Client')->first();
+        if ($clientRole) {
+            $userModel->assignRole($userId, $clientRole['id']);
+        }
 
-        // Kirim email aktivasi
+        // Generate token aktivasi dan simpan ke tabel user_activations
+        $token              = bin2hex(random_bytes(32));
+        $expiresAt          = date('Y-m-d H:i:s', strtotime('+1 day'));
+        $activationModel    = new \App\Models\UserActivationModel();
+        $activationModel->insert([
+            'user_id'       => $userId,
+            'token'         => $token,
+            'expires_at'    => $expiresAt,
+            'created_at'    => date('Y-m-d H:i:s')
+        ]);
+        // get Mail Service
         $mailService = new \App\Services\MailService();
+
+        $db_group_cst   = \Config\Database::connect();
+        $group_customer =   $db_group_cst->query("SELECT * FROM user_groups WHERE kode_group = '$group_store' ")
+                            ->getRow();
+
+        // Kirim email aktivasi ke pic
+        if($group_customer){
+            $mailService->sendActivationPic($group_customer->email, $token, $userData);
+        }
+        // Kirim email aktivasi
         $mailService->sendActivation($email, $token);
 
-        return redirect()->to('/login')->with('success', 'Registrasi berhasil! Silakan cek email untuk aktivasi akun.');
+        return redirect()->to('/login')->with('success', 'Registrasi berhasil !! Silakan hubungi pic untuk aktivasi akun.');
     }
 
     public function activateAccount()
@@ -342,4 +389,13 @@ class AuthController extends BaseController
         $data['success'] = 'Password berhasil diubah.';
         return view('backend/auth/change_password', $data);
     }
+
+    public function getCustomerByGroup()
+    {
+        $group = $this->request->getPost('group');
+        $db  = \Config\Database::connect('db_tol');
+        $customers = $db->query("SELECT * FROM db_tol.mst_customer WHERE group_customer = ?", [$group])->getResult();
+        return $this->response->setJSON($customers);
+    }
+
 }

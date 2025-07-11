@@ -13,7 +13,7 @@ class UserModel extends Model
     protected $useSoftDeletes   = false; // Jika Anda ingin soft delete, set true dan tambahkan 'deleted_at'
     // protected $allowedFields    = ['name', 'kode_customer',  'email', 'password', 'role', 'api_key', 'reset_token', 'reset_expires'];
 
-    protected $allowedFields    = ['name', 'email', 'password', 'api_key', 'reset_token', 'reset_expires', 'is_active'];
+    protected $allowedFields    = ['kode_group','kode_customer','name', 'email', 'password', 'api_key', 'reset_token', 'reset_expires', 'is_active'];
 
 
     // Dates
@@ -40,6 +40,43 @@ class UserModel extends Model
             $data['data']['password'] = password_hash($data['data']['password'], PASSWORD_DEFAULT);
         }
         return $data;
+    }
+
+    /**
+     * Mengambil semua pengguna beserta peran mereka secara efisien untuk menghindari N+1 query.
+     * @return array Daftar pengguna dengan array 'roles' di dalamnya.
+     */
+    public function getUsersWithRoles(): array
+    {
+        // 1. Ambil semua pengguna
+        $users = $this->findAll();
+        if (empty($users)) {
+            return [];
+        }
+
+        // 2. Kumpulkan semua ID pengguna
+        $userIds = array_column($users, 'id');
+
+        // 3. Ambil semua role untuk ID pengguna tersebut dalam satu query
+        $rolesData = $this->db->table('roles r')
+            ->select('r.name, ur.user_id')
+            ->join('user_roles ur', 'ur.role_id = r.id')
+            ->whereIn('ur.user_id', $userIds)
+            ->get()
+            ->getResultArray();
+
+        // 4. Petakan peran ke setiap ID pengguna untuk pencarian cepat
+        $rolesByUserId = [];
+        foreach ($rolesData as $role) {
+            $rolesByUserId[$role['user_id']][] = $role['name'];
+        }
+
+        // 5. Gabungkan data peran ke dalam data pengguna
+        foreach ($users as &$user) {
+            $user['roles'] = $rolesByUserId[$user['id']] ?? [];
+        }
+
+        return $users;
     }
 
     // Start New Update Role & Permission

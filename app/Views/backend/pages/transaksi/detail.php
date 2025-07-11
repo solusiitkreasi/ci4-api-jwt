@@ -61,17 +61,13 @@
                 <tr>
                     <th>Nama Jasa</th>
                     <th>Qty</th>
-                    <th>Operator</th>
-                    <th>Waktu Input</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($jasa as $row): ?>
                 <tr>
-                    <td><?= esc($row['nama_jasa'] ?? '-') ?></td>
+                    <td><?= esc($row['jasa_id'] ?? '') ?> - <?= esc($row['nama_jasa'] ?? '-') ?></td>
                     <td><?= esc($row['qty'] ?? '-') ?></td>
-                    <td><?= esc($row['operator'] ?? '-') ?></td>
-                    <td><?= esc($row['wkt_input'] ?? '-') ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>

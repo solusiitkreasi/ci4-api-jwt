@@ -58,12 +58,11 @@ class Filters extends BaseFilters
     public array $required = [
         'before' => [
             'forcehttps', // Force Global Secure Requests
-            'pagecache',  // Web Page Caching
+            // 'csrf', // Nonaktifkan CSRF global sementara untuk development
+            'secureheaders', // Tambahkan secure headers
         ],
         'after' => [
-            'pagecache',   // Web Page Caching
-            'performance', // Performance Metrics
-            'toolbar',     // Debug Toolbar
+            'toolbar',
         ],
     ];
 
@@ -76,8 +75,8 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             'dbCheck',
+            // 'csrf', // Nonaktifkan CSRF di globals juga untuk development
             // 'honeypot',
-            // 'csrf',
             // 'invalidchars',
         ],
         'after' => [

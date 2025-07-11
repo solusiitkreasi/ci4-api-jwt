@@ -74,7 +74,7 @@
                     <div class="sw-lg-70 min-h-100 bg-foreground d-flex justify-content-center align-items-center shadow-deep py-5 full-page-content-left-border">
                         <div class="sw-lg-50 px-5">
                             <div class="sh-11">
-                                <a href="#">
+                                <a href="<?= site_url() ?>">
                                     <div class="logo-default-login"></div>
                                 </a>
                             </div>

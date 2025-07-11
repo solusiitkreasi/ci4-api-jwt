@@ -44,12 +44,33 @@ class MailService
      * @param string $token
      * @return bool
      */
+    public function sendActivationPic($to, $token, $store_data)
+    {
+        $subject = 'Aktivasi Akun Store';
+        $activationLink = base_url('activate?token=' . $token);
+        $message = 'Klik tombol di bawah untuk aktivasi jika sudah sesuai, abaikan jika bukan dari store anda</ br>';
+        $action_button = '<a href="' . $activationLink . '" class="button">Aktivasi Akun</a>';
+        $body = view('emails/activation_pic', [
+            'subject' => $subject,
+            'message' => $message,
+            'store_data' => $store_data,
+            'action_button' => $action_button
+        ]);
+        return $this->send($to, $subject, $body);
+    }
+
+    /**
+     * Kirim email aktivasi akun untuk client
+     *
+     * @param string $to
+     * @param string $token
+     * @return bool
+     */
     public function sendActivation($to, $token)
     {
-        $subject = 'Aktivasi Akun Anda';
-        $activationLink = base_url('activate?token=' . $token);
-        $message = 'Klik tombol di bawah untuk aktivasi akun Anda.';
-        $action_button = '<a href="' . $activationLink . '" class="button">Aktivasi Akun</a>';
+        $subject = 'Registrasi Berhasil';
+        $message = 'Silahkan hubungi Pic anda untuk aktivasi.';
+        $action_button = '';
         $body = view('emails/activation', [
             'subject' => $subject,
             'message' => $message,

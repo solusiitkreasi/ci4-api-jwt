@@ -14,29 +14,25 @@
         </div>
         <!-- Logo End -->
 
-       
+        <!-- User Menu Start -->
+        <div class="user-container d-flex">
+          <a href="#" class="d-flex user position-relative" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <img class="profile" alt="profile" src="<?= base_url('assets/admin/') ?>img/profile/profile.webp" />
+              <div class="name"><b><?= strtoupper(session()->get('name')); ?></b></div>
+          </a>
+        </div>
+          <!-- User Menu End -->
 
         <!-- Icons Menu Start -->
         <ul class="list-unstyled list-inline text-center menu-icons">
-
-            <li class="list-inline-item">
-                <a href="#" data-bs-toggle="modal" data-bs-target="#searchPagesModal">
-                    <i data-acorn-icon="search" class="me-1" data-acorn-size="17"></i>
-                    <div class="text-extra-small"> Search</div>
-                </a>
-            </li>
             <li>
                 <a href="<?= base_url('logout'); ?>">
                     <i data-acorn-icon="logout" class="me-1" data-acorn-size="17" title="Logout"></i>
                     <div class="text-extra-small">Logout</div>
                 </a>
             </li>
-
         </ul>
         <!-- Icons Menu End -->
-
-        
-        
 
         <!-- Menu Start -->
           <div class="menu-container flex-grow-1">
@@ -90,15 +86,13 @@
                 </li>
             </ul> -->
           </div>
-          <!-- Menu End -->
+        <!-- Menu End -->
 
         <!-- Mobile Buttons Start -->
         <div class="mobile-buttons-container">
-            <!-- Menu Button Start -->
             <a href="#" id="mobileMenuButton" class="menu-button">
                 <i data-acorn-icon="menu"></i>
             </a>
-            <!-- Menu Button End -->
         </div>
         <!-- Mobile Buttons End -->
     </div>

@@ -196,7 +196,7 @@ $routes->post('/reset_password', 'Backend\AuthController::resetAction');
 $routes->get('/register', 'Backend\AuthController::registerView');
 $routes->post('/register', 'Backend\AuthController::registerAction');
 $routes->get('/activate', 'Backend\AuthController::activateAccount');
-
+$routes->post('/register/get-customer-by-group', 'Backend\AuthController::getCustomerByGroup');
 
 
 // Grup untuk semua halaman admin yang terproteksi
@@ -208,7 +208,6 @@ $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' =>
     $routes->get('change_password', 'AuthController::changePasswordView');
     $routes->post('change_password', 'AuthController::changePasswordAction');
 
-
     // Rute untuk manajemen transaksi
     $routes->group('transaksi', function($routes) {
         $routes->get('/', 'TransaksiController::index');
@@ -217,11 +216,10 @@ $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' =>
         $routes->get('datatables', 'TransaksiController::datatables');
         $routes->get('export_csv', 'TransaksiController::exportCsv');
         $routes->get('export_excel', 'TransaksiController::exportExcel');
+        $routes->get('create', 'TransaksiController::create');
+        $routes->post('create', 'TransaksiController::create');
     });
     
-    
-    // Rute untuk manajemen pengguna
-    $routes->get('users', 'UserController::index');
 
     // Role Management
     $routes->group('role', function($routes) {
@@ -247,13 +245,35 @@ $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' =>
         $routes->get('datatables', 'PermissionController::datatables');
     });
 
+    // Rute untuk manajemen payment gateway
+    $routes->group('payment', function($routes) {
+        $routes->get('/', 'PaymentGatewayController::index');
+        $routes->get('create', 'PaymentGatewayController::create');
+        $routes->post('create', 'PaymentGatewayController::store');
+        $routes->get('edit/(:num)', 'PaymentGatewayController::edit/$1');
+        $routes->post('update/(:num)', 'PaymentGatewayController::update/$1');
+        $routes->post('delete/(:num)', 'PaymentGatewayController::delete/$1');
+        $routes->post('toggle/(:num)', 'PaymentGatewayController::toggle/$1');
+    });
+
+    // Manajemen User
+    $routes->group('user', function($routes) {
+        $routes->get('/', 'UserController::index');
+        $routes->get('datatables', 'UserController::datatables'); // Rute untuk DataTables
+        $routes->get('create', 'UserController::create');
+        $routes->post('create', 'UserController::store');
+        $routes->post('get-stores-by-group', 'UserController::getStoresByGroup'); // Rute AJAX
+        $routes->get('edit/(:num)', 'UserController::edit/$1');
+        $routes->post('edit/(:num)', 'UserController::update/$1');
+        $routes->get('delete/(:num)', 'UserController::delete/$1');
+
+    });
+    
+
 });
 
 // Fallback untuk route tidak ditemukan (404 Not Found)
 $routes->set404Override('App\Controllers\CustomErrors::show404');
-
-
-
 
 // $routes->set404Override(function(){
     //     // Muat helper response kita yang sudah ada

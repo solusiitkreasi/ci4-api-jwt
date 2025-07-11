@@ -70,15 +70,18 @@ class MenuModel extends Model
     // }
 
 
-    function get_permission_roles($roleId) {
-        // Ambil slug permission yang dimiliki role
+    function get_permission_roles($roleIds) {
+        // Ambil slug permission dari semua role user (array)
+        if (!is_array($roleIds)) {
+            $roleIds = [$roleIds];
+        }
         $query = $this->db->table('role_permissions rp')
             ->join('permissions p', 'p.id = rp.permission_id')
-            ->where('rp.role_id', $roleId)
+            ->whereIn('rp.role_id', $roleIds)
             ->select('p.slug')
             ->get();
         $result = $query->getResultArray();
-        return array_column($result, 'slug');
+        return array_unique(array_column($result, 'slug'));
     }
 
 
@@ -90,7 +93,13 @@ class MenuModel extends Model
         $seg2 = $segments[1] ?? '';
         $items = $this->get_items();
         $user_session = session()->get('role_id');
-        $permission_slugs = $this->get_permission_roles($user_session ?? '');
+        // Pastikan $user_session selalu array dan tidak kosong
+        if (empty($user_session)) {
+            $permission_slugs = [];
+        } else {
+            $roleIds = is_array($user_session) ? $user_session : [$user_session];
+            $permission_slugs = $this->get_permission_roles($roleIds);
+        }
         $tree = '<ul id="menu" class="menu">';
         for($i=0, $ni=count($items); $i < $ni; $i++){
             $parent = $items[$i];

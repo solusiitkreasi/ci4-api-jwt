@@ -62,6 +62,27 @@
 <!-- modal alert item list -->
 
 
+<!-- Modal untuk Error -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">Terjadi Kesalahan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="errorModalBody">
+        <!-- Pesan error akan ditampilkan di sini -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
 <!-- Vendor Scripts Start -->
 <script src="<?= base_url('assets/admin/') ?>js/vendor/jquery-3.5.1.min.js"></script>
 <script src="<?= base_url('assets/admin/') ?>js/vendor/bootstrap.bundle.min.js"></script>
@@ -107,7 +128,7 @@
 
 
 
-
+<script src="<?= base_url('assets/admin/') ?>js/forms/controls.select2.js"></script>
 
 <!-- Page Specific Scripts Start -->
 <script src="<?= base_url('assets/admin/') ?>js/common.js"></script>
@@ -120,6 +141,7 @@
     $(document).ready(function() {
 
         $('.select2-single').select2();
+
 
         $(function() {
             $('#selectTanggal').datepicker({

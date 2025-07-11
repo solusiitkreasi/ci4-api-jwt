@@ -9,10 +9,9 @@
             <!-- Title Start -->
             <div class="col-12 col-md-7">
                 <a class="muted-link pb-2 d-inline-block hidden" href="#">
-                    <span class="align-middle lh-1 text-small">&nbsp;</span>
+                    <span class="align-middle lh-1 text-small">&nbsp; </span>
                 </a>
-                <?php //$Personil = $this->Model_global->getPersonil($this->session->userdata('username')); ?>
-                <h1 class="mb-0 pb-0 display-4 text-black font-weight-bold" id="title">Welcome, <b> </b> ! <br>
+                <h1 class="mb-0 pb-0 display-4 text-black font-weight-bold" id="title">Welcome, <b><?= strtoupper(session()->get('name')); ?></b> ! <br>
             </div>
             <!-- Title End -->
         </div>
@@ -78,6 +77,9 @@
 
             </div>
 
+            <?php  $filterRole = session()->get('roles');
+                if (is_array($filterRole) ? in_array('Super Admin', $filterRole) : $filterRole == 'Super Admin') { ?>
+
             <div class="col-md-4">
                 <div class="card w-100 sh-60 mb-5">
                     <img src="<?= base_url('assets/admin/') ?>img/banner/cta-square-4.webp" class="card-img h-100" alt="card image" />
@@ -95,13 +97,11 @@
                         </div>
                     </div>
                 </div>
-                <!-- Today's Orders End -->
             </div>
+            <?php } ?>
+
         </div>
     </div>
     <!-- Stats End -->
-
-    <script src="<?= base_url('assets/admin/') ?>js/base/searchD.js"></script>
-
 
 <?= $this->endSection() ?>

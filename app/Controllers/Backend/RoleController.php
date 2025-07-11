@@ -132,6 +132,8 @@ class RoleController extends BaseController
         $role = $model->find($id);
         if ($role && strtolower($role['name']) === 'super admin') {
             return redirect()->to('/backend/role')->with('error', 'Role Super Admin tidak boleh dihapus!');
+        }else if($role && strtolower($role['name']) === 'client'){
+            return redirect()->to('/backend/role')->with('error', 'Role Client tidak boleh dihapus!');
         }
         $this->service->deleteRole($id);
         return redirect()->to('/backend/role')->with('success', 'Role berhasil dihapus');

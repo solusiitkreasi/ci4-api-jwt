@@ -39,11 +39,19 @@ class CustomErrors extends Controller
             return $this->response->setJSON($responseData);
 
         } elseif ($firstSegment === 'backend') {
+            // Cek session login backend
+
+            $session = session()->get('is_logged_in');
+            if (!$session) {
+                // Redirect ke halaman login backend jika session habis
+                return redirect()->to('/login');
+            }
+
             $this->response->setStatusCode(ResponseInterface::HTTP_NOT_FOUND);
             $menuModel = model('App\\Models\\MenuModel');
             $data = [
                 'title' => '404 Not Found',
-                'message' => 'Maaf, halaman backend yang Anda cari tidak dapat ditemukan.',
+                'message' => 'Maaf, halaman yang Anda cari tidak dapat ditemukan.',
                 'menu_sidebar' => $menuModel->generateTree(),
             ];
             return view('errors/html/error_404_backend', $data);

@@ -5,7 +5,13 @@
     <title>Welcome to API TOL V-1.0</title>
     <meta name="description" content="The small framework with powerful features">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" type="image/png" href="/favicon.ico">
+    
+    <!-- Favicon Tags Start -->
+    <link rel="shortcut icon" href="https://place-hold.it/100x100/00362b/fff/fff?text=TOL&fontsize=30&bold" type="image/x-icon" >
+    <link rel="icon" type="image/png" href="https://place-hold.it/128x128/00362b/fff/fff?text=TOL&fontsize=30&bold" sizes="128x128" />
+    <meta name="application-name" content="TOL" />
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <!-- Favicon Tags End -->
 
     <!-- STYLES -->
 
@@ -62,8 +68,8 @@
         }
         header li.menu-item a:hover,
         header li.menu-item a:focus {
-            background-color: rgba(221, 72, 20, .2);
-            color: rgba(221, 72, 20, 1);
+            background-color: rgb(5 57 46 / 79%);
+            color: rgb(247 244 244);
         }
         header .logo {
             float: left;
@@ -77,7 +83,7 @@
             font-weight: bold;
         }
         header .menu-toggle button {
-            background-color: rgba(221, 72, 20, .6);
+            background-color: rgb(0 54 43);
             border: none;
             border-radius: 3px;
             color: rgba(255, 255, 255, 1);
@@ -92,7 +98,7 @@
         }
         header .menu-toggle button:hover,
         header .menu-toggle button:focus {
-            background-color: rgba(221, 72, 20, .8);
+            background-color: rgb(0 54 43);
             color: rgba(255, 255, 255, .8);
         }
         header .heroe {
@@ -135,7 +141,7 @@
             display: block;
         }
         section a {
-            color: rgba(221, 72, 20, 1);
+            color: rgb(0 54 43);
         }
         section svg {
             margin-bottom: -5px;
@@ -156,7 +162,7 @@
             stroke-width: 32px;
         }
         footer {
-            background-color: rgba(221, 72, 20, .8);
+            background-color: rgb(0 54 43);
             text-align: center;
         }
         footer .environment {
@@ -188,11 +194,11 @@
                 display: none;
             }
             header li.menu-item a {
-                background-color: rgba(221, 72, 20, .1);
+                background-color: rgb(16 133 109 / 52%);
             }
             header li.menu-item a:hover,
             header li.menu-item a:focus {
-                background-color: rgba(221, 72, 20, .7);
+                background-color: rgb(0 54 43);
                 color: rgba(255, 255, 255, .8);
             }
         }
@@ -202,12 +208,32 @@
 
 <header>
 
+    <div class="menu">
+        <ul>
+            <li class="logo">
+                <a href="<?= base_url() ?>">
+                    <img src="https://place-hold.it/110x45/00362b/fff/fff?text=TOL%20%20API&fontsize=20&bold" alt="logo" />
+                </a>
+            </li>
+            <li class="menu-toggle">
+                <button id="menuToggle">&#9776;</button>
+            </li>
+            <?php if(!session()->get('is_logged_in')) { ?>
+                <li class="menu-item hidden"><a href="<?= base_url() ?>login" >Login</a></li>
+            <?php }else{ ?>
+                <li class="menu-item hidden"><a href="<?= base_url() ?>backend/dashboard" >Dashboard</a></li>
+            <?php } ?>
+            <li class="menu-item hidden"><a href="#" >Doc API</a></li>
+            
+        </ul>
+    </div>
+
 
     <div class="heroe">
 
-        <h1>Welcome to TOL API V.1.0</h1>
+        <h1>Welcome, TOL API</h1>
 
-        <h2>The small framework with powerful features</h2>
+        <h2>The small app with powerful features</h2>
 
     </div>
 
@@ -231,6 +257,16 @@
 
 </section>
 
+<script {csp-script-nonce}>
+    document.getElementById("menuToggle").addEventListener('click', toggleMenu);
+    function toggleMenu() {
+        var menuItems = document.getElementsByClassName('menu-item');
+        for (var i = 0; i < menuItems.length; i++) {
+            var menuItem = menuItems[i];
+            menuItem.classList.toggle("hidden");
+        }
+    }
+</script>
 
 </body>
 </html>
