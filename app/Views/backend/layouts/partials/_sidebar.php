@@ -4,7 +4,7 @@
     <div class="nav-content d-flex">
         <!-- Logo Start -->
         <div class="logo position-relative">
-            <a href="<?= base_url('dashboard') ?>">
+            <a href="<?= base_url('backend/dashboard') ?>">
             <!-- Logo can be added directly -->
             <img src="https://place-hold.it/110x45/00362b/fff/fff?text=TOL%20-%20API&fontsize=20&bold" alt="logo" />
 

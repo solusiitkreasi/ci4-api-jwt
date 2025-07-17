@@ -67,9 +67,38 @@
             <div class="mb-3 w-100">
                 <label class="form-label">Data Role</label>
                 <select multiple="multiple" id="select2Multiple" name="roles[]" class="form-control select2-multiple <?= isset($errors['roles']) ? 'is-invalid' : '' ?>" required style="width:100%">
-                    <?php foreach($allRoles as $role): ?>
-                        <option value="<?= $role['id'] ?>" <?= (isset($selectedRoles) && in_array($role['id'], $selectedRoles)) ? 'selected' : '' ?>><?= $role['name'] ?></option>
-                    <?php endforeach; ?>
+                    <?php
+                    $isStorePic = false;
+                    $isAdmin = false;
+                    $isSuperAdmin = false;
+                    if (session()->has('user_id')) {
+                        $userModel = new \App\Models\UserModel();
+                        $currentUserId = session('user_id');
+                        $currentUserRoles = $userModel->getRoles($currentUserId);
+                        foreach ($currentUserRoles as $roleCheck) {
+                            $roleName = strtolower(trim($roleCheck['name']));
+                            if ($roleName === 'store pic') $isStorePic = true;
+                            if ($roleName === 'admin') $isAdmin = true;
+                            if ($roleName === 'super admin') $isSuperAdmin = true;
+                        }
+                    }
+                    foreach($allRoles as $role):
+                        $roleName = strtolower(trim($role['name']));
+                        $optionStyle = 'style="color:black"';
+                        if ($isSuperAdmin) {
+                            echo '<option value="'.$role['id'].'" '.$optionStyle.(isset($selectedRoles) && in_array($role['id'], $selectedRoles) ? ' selected' : '').'>'.$role['name'].'</option>';
+                        } elseif ($isAdmin) {
+                            if ($roleName === 'store pic' || $roleName === 'client' ) {
+                                echo '<option value="'.$role['id'].'" '.$optionStyle.(isset($selectedRoles) && in_array($role['id'], $selectedRoles) ? ' selected' : '').'>'.$role['name'].'</option>';
+                            }
+                        } elseif ($isStorePic) {
+                            if ($roleName === 'client') {
+                                echo '<option value="'.$role['id'].'" '.$optionStyle.(isset($selectedRoles) && in_array($role['id'], $selectedRoles) ? ' selected' : '').'>'.$role['name'].'</option>';
+                            }
+                        }
+                    endforeach;
+                    ?>
+                <?= isset($isStorePic) ? 'disabled' : '' ?>
                 </select>
                 <?php if(isset($errors['roles'])): ?>
                     <div class="invalid-feedback d-block"><?= $errors['roles'] ?></div>
@@ -101,8 +130,36 @@
 </div>
 
 
+<style>
+/* Select2 dropdown highlighted/selected option font color black */
+.select2-container--bootstrap-5 .select2-results__option.select2-results__option--highlighted {
+    color: #000 !important;
+}
+.select2-container--bootstrap4 .select2-results__option--highlighted, .select2-container--bootstrap4 .select2-results__option--highlighted.select2-results__option[aria-selected=true] {
+    color: #00362b !important;
+}
+</style>
 <script src="<?= base_url('assets/admin/') ?>js/vendor/jquery-3.5.1.min.js"></script>
 <script>
+$(document).ready(function() {
+    // Pastikan text select2-multiple tetap hitam
+    $('#select2Multiple option').css('color', 'black');
+    $('#select2Multiple').on('change', function() {
+        $('#select2Multiple option').css('color', 'black');
+    });
+    // Jika pakai Select2, pastikan dropdown dan selected item hitam
+    if ($.fn.select2) {
+        $('#select2Multiple').select2({
+            theme: 'bootstrap-5'
+        });
+        $('#select2Multiple').on('select2:open', function() {
+            $('.select2-results__option').css('color', 'black');
+        });
+        $('#select2Multiple').on('select2:select', function() {
+            $('.select2-selection__choice').css('color', 'black');
+        });
+    }
+});
 $(document).ready(function() {
     // Inisialisasi Select2 pada elemen yang relevan
     // $('.select2').select2({ theme: 'bootstrap-5' });

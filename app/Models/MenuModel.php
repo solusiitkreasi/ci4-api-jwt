@@ -136,6 +136,8 @@ class MenuModel extends Model
             if($isActiveParent) $liClass = 'active open show';
             $aClass = $isActiveParent ? 'active' : '';
             $tree .= '<li class="'.$liClass.'">';
+
+            
             if($parents_sub == 0){
                 $tree .= '<a href="'.$parent_link .'" class="'.$aClass.'">
                         <i data-acorn-icon="'.$parent['icon'].'" class="icon" data-acorn-size="18"></i>';

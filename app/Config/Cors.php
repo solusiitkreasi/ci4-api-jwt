@@ -27,79 +27,68 @@ class Cors extends BaseConfig
     public array $default = [
         /**
          * Origins for the `Access-Control-Allow-Origin` header.
-         *
-         * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
-         *
-         * E.g.:
-         *   - ['http://localhost:8080']
-         *   - ['https://www.example.com']
+         * PRODUCTION: Specify exact domains
          */
-        'allowedOrigins' => [],
+        'allowedOrigins' => [
+            'https://your-frontend-domain.com',
+            'https://admin.your-domain.com',
+        ],
 
         /**
          * Origin regex patterns for the `Access-Control-Allow-Origin` header.
-         *
-         * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
-         *
-         * NOTE: A pattern specified here is part of a regular expression. It will
-         *       be actually `#\A<pattern>\z#`.
-         *
-         * E.g.:
-         *   - ['https://\w+\.example\.com']
+         * PRODUCTION: Use specific patterns
          */
-        'allowedOriginsPatterns' => [],
+        'allowedOriginsPatterns' => [
+            '#https://.*\.your-domain\.com#',
+        ],
 
         /**
          * Weather to send the `Access-Control-Allow-Credentials` header.
-         *
-         * The Access-Control-Allow-Credentials response header tells browsers whether
-         * the server allows cross-origin HTTP requests to include credentials.
-         *
-         * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
+         * PRODUCTION: Set to true for JWT/session based auth
          */
-        'supportsCredentials' => false,
+        'supportsCredentials' => true,
 
         /**
          * Set headers to allow.
-         *
-         * The Access-Control-Allow-Headers response header is used in response to
-         * a preflight request which includes the Access-Control-Request-Headers to
-         * indicate which HTTP headers can be used during the actual request.
-         *
-         * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
+         * PRODUCTION: Specify only needed headers
          */
-        'allowedHeaders' => [],
+        'allowedHeaders' => [
+            'Accept',
+            'Accept-Language',
+            'Content-Language',
+            'Content-Type',
+            'Authorization',
+            'X-Requested-With',
+            'X-CSRF-TOKEN',
+            'X-API-KEY',
+        ],
 
         /**
          * Set headers to expose.
-         *
-         * The Access-Control-Expose-Headers response header allows a server to
-         * indicate which response headers should be made available to scripts running
-         * in the browser, in response to a cross-origin request.
-         *
-         * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
+         * PRODUCTION: Minimal exposure
          */
-        'exposedHeaders' => [],
+        'exposedHeaders' => [
+            'X-Total-Count',
+            'X-Page-Count',
+        ],
 
         /**
          * Set methods to allow.
-         *
-         * The Access-Control-Allow-Methods response header specifies one or more
-         * methods allowed when accessing a resource in response to a preflight
-         * request.
-         *
-         * E.g.:
-         *   - ['GET', 'POST', 'PUT', 'DELETE']
-         *
-         * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
+         * PRODUCTION: Only needed methods
          */
-        'allowedMethods' => [],
+        'allowedMethods' => [
+            'GET',
+            'POST',
+            'PUT',
+            'PATCH',
+            'DELETE',
+            'OPTIONS',
+        ],
 
         /**
          * Set how many seconds the results of a preflight request can be cached.
-         *
-         * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age
+         * PRODUCTION: Reasonable cache time
          */
-        'maxAge' => 7200,
+        'maxAge' => 3600, // 1 hour
     ];
 }

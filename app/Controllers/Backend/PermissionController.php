@@ -119,11 +119,22 @@ class PermissionController extends BaseController
         $permission = $this->service->getPermission($id);
         if (strtolower($this->request->getMethod()) === 'post') {
             $data = $this->request->getPost();
-            // Validasi unique slug saat edit
             $permissionModel = new PermissionModel();
             $permissionModel->setValidationRule('name', 'required|max_length[100]');
             $permissionModel->setValidationRule('slug', 'required|max_length[100]|is_unique[permissions.slug,id,'.$id.']|alpha_dash');
             $permissionModel->setValidationRule('description', 'max_length[255]');
+            // Proses tipe permission dan parent/menu
+            $tipe = $data['tipe_permission'] ?? 'parent';
+            if ($tipe === 'parent') {
+                $data['parent_id'] = 0;
+                $data['menu_on'] = isset($data['menu_on']) ? 1 : 0;
+            } elseif ($tipe === 'sub') {
+                $data['parent_id'] = $data['parent_id'] ?? null;
+                $data['menu_on'] = isset($data['menu_on']) ? 1 : 0;
+            } elseif ($tipe === 'permission') {
+                $data['parent_id'] = $data['parent_id'] ?? null;
+                $data['menu_on'] = 0;
+            }
             $data['id'] = $id;
             $result = $permissionModel->update($id, $data);
             if ($result === false) {

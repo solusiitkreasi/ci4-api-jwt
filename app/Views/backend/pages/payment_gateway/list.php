@@ -1,7 +1,7 @@
 <?= $this->extend('backend/layouts/template') ?>
 <?= $this->section('content') ?>
 <h1 class="h3 mb-3">Payment Gateway Management</h1>
-<a href="<?= base_url('backend/payment-gateway/create') ?>" class="btn btn-primary mb-3">Tambah Gateway</a>
+<a href="<?= base_url('backend/payment/create') ?>" class="btn btn-primary mb-3">Tambah Gateway</a>
 <?php if (session('success')): ?><div class="alert alert-success"><?= session('success') ?></div><?php endif; ?>
 <?php if (session('error')): ?><div class="alert alert-danger"><?= session('error') ?></div><?php endif; ?>
 <table class="table table-bordered table-striped">

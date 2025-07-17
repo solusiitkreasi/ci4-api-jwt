@@ -37,6 +37,7 @@ class AuthController extends BaseController
         $this->userActivationModel = new UserActivationModel();
 
         $this->jwtService = new JWTService();
+        $this->auditLogService = new \App\Services\AuditLogService();
         helper(['response', 'form', 'text']); // Muat helper 'text' untuk random_string
 
         $this->validator = \Config\Services::validation();
@@ -160,6 +161,19 @@ class AuthController extends BaseController
         ];
         $token = $this->jwtService->encode($payload);
 
+        // Log successful login
+        $this->auditLogService->logAction(
+            $user['id'],
+            'LOGIN',
+            'auth',
+            null,
+            null,
+            [
+                'login_method' => 'password',
+                'user_agent' => $this->request->getUserAgent()->getAgentString()
+            ]
+        );
+
         // Siapkan data user untuk response (tanpa password)
         $userResponse = [
             'id'    => $user['id'],
@@ -264,6 +278,19 @@ class AuthController extends BaseController
         // Contoh sederhana (tanpa blacklist):
         $userName = $userFromRequest->name ?? $userFromRequest->email ?? 'User';
         log_message('info', "User '{$userName}' (ID: {$userFromRequest->id}) logged out.");
+
+        // Log logout activity
+        $this->auditLogService->logAction(
+            $userFromRequest->id,
+            'LOGOUT',
+            'auth',
+            null,
+            null,
+            [
+                'logout_method' => 'api',
+                'user_agent' => $this->request->getUserAgent()->getAgentString()
+            ]
+        );
 
         return api_response(null, 'Logout successful. Please discard your token.');
     }

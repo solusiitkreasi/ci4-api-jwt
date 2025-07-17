@@ -19,18 +19,13 @@ class TransaksiController extends BaseController
 
     public function index()
     {
-        $transaksiModel = new TransaksiWebModel();
-        $userModel = new UserModel();
-        $customers = $userModel->select('kode_customer, name')
-            ->where('kode_customer IS NOT NULL')
-            ->where('kode_customer !=', '')
-            ->groupBy('kode_customer')
-            ->orderBy('kode_customer', 'ASC')
-            ->findAll();
-
+        // Ambil data group_customer untuk filter Group Store
+        // Ambil data group store dari db_tol
+        $db_tol  = \Config\Database::connect('db_tol');
+        $group_customer = $db_tol->query("SELECT * FROM db_tol.mst_group_customer WHERE aktif = 1 AND kode_group IS NOT NULL AND kode_group != '' ORDER BY nama_group ASC")->getResult();
         $data = [
             'title' => 'Manajemen Transaksi',
-            'customers'   => $customers,
+            'group_customer' => $group_customer,
         ];
 
         return view('backend/pages/transaksi/list', $data);
@@ -42,12 +37,13 @@ class TransaksiController extends BaseController
         $model      = new TransaksiWebModel();
         $userModel  = new UserModel();
         
-        // Kolom harus sesuai urutan datatables (No, No PO, Nama Klien, wkt_input, Status, Aksi)
+        // Kolom harus sesuai urutan datatables (No, No PO, Kode Customer, Nama Klien, Tanggal, Status, Aksi)
         $columns = [
             null, // No (nomor urut, tidak digunakan untuk order)
             'no_po',
+            'kode_customer', 
             'customer_name',
-            'wkt_input', // kolom ke-3 (index 3) untuk sorting tanggal
+            'wkt_input', // kolom ke-4 (index 4) untuk sorting tanggal
             'is_proses_tol',
             'transaction_pr_h_apis.id',
         ];
@@ -56,7 +52,7 @@ class TransaksiController extends BaseController
         $start          = (int) $request->getGet('start');
         $length         = (int) $request->getGet('length');
         $search         = $request->getGet('search')['value'] ?? '';
-        $orderColIdx    = (int) $request->getGet('order')[0]['column'] ?? 3;
+        $orderColIdx    = (int) $request->getGet('order')[0]['column'] ?? 4; // Default ke kolom tanggal
         $orderCol       = $columns[$orderColIdx] ?? 'wkt_input';
 
         if ($orderCol === null) $orderCol = 'wkt_input';
@@ -73,55 +69,10 @@ class TransaksiController extends BaseController
             ->join('users', 'users.id = transaction_pr_h_apis.pic_input', 'left');
 
         // Filtering logic here...
-        $getRole = $userModel->getRoles($pic_input);
-        $filterRole = array_column($getRole, 'name');
-        if (in_array('Store Pic', $filterRole)) {
-            $get_customers_data = $userModel->select('kode_group')->where('id', $pic_input)->first();
-            $get_group = $get_customers_data['kode_group'] ?? null;
-            if ($get_group) {
-                $db_store = \Config\Database::connect('db_tol');
-                $get_store = $db_store->query("SELECT customer_id FROM db_tol.mst_customer WHERE group_customer = ?", [$get_group])->getResult();
-                $storeIDArray = array_map(fn($row) => $row->customer_id, $get_store);
-                if (!empty($storeIDArray)) {
-                    $builder->whereIn('customer_id', $storeIDArray);
-                } else {
-                    $builder->where('pic_input', $pic_input); // Fallback jika grup tidak punya store
-                }
-            } else {
-                $builder->where('pic_input', $pic_input);
-            }
-        }else if (in_array('Super Admin', $filterRole)) {
-            
-        } else {
-            $builder->where('pic_input', $pic_input);
-        }
+        $this->applyRoleBasedFiltering($builder, $userModel, $pic_input);
 
-        // Filter by customer_id (kode_customer)
-        $filterCustomer = $request->getGet('filter_customer');
-        if ($filterCustomer) {
-            $builder->where('transaction_pr_h_apis.customer_id', $filterCustomer);
-        }
-        // Filter by status (is_proses_tol)
-        $filterStatus = $request->getGet('filter_status');
-        if ($filterStatus !== null && $filterStatus !== '') {
-            $builder->where('transaction_pr_h_apis.is_proses_tol', $filterStatus);
-        }
-        // Filter by tanggal (range)
-        $filterDateFrom = $request->getGet('filter_date_from');
-        $filterDateTo   = $request->getGet('filter_date_to');
-        if ($filterDateFrom) {
-            // Format ke Y-m-d
-            $from = \DateTime::createFromFormat('d-m-Y', $filterDateFrom);
-            if ($from) {
-                $builder->where('DATE(wkt_input) >=', $from->format('Y-m-d'));
-            }
-        }
-        if ($filterDateTo) {
-            $to = \DateTime::createFromFormat('d-m-Y', $filterDateTo);
-            if ($to) {
-                $builder->where('DATE(wkt_input) <=', $to->format('Y-m-d'));
-            }
-        }
+        // Apply additional filters (customer, status, date range)
+        $this->applyCustomFilters($builder, $request);
 
         // Total sebelum filter
         $totalRecords = $model->countAllResults(false);
@@ -131,7 +82,8 @@ class TransaksiController extends BaseController
             $builder->groupStart()
                 ->like('no_po', $search)
                 ->orLike('users.name', $search)
-                ->orLike('transaction_pr_h_apis.is_proses_tol', $search)
+                ->orLike('users.kode_customer', $search)
+                ->orLike('transaction_pr_h_apis.customer_id', $search)
                 ->groupEnd();
         }
 
@@ -149,12 +101,16 @@ class TransaksiController extends BaseController
             $status = ($row['is_proses_tol'] == 1)
                 ? '<span class="badge bg-success">Sudah</span>'
                 : '<span class="badge bg-info">Proses</span>';
+            
+            // Format tanggal untuk sorting yang lebih baik
+            $formattedDate = $row['wkt_input'] ? date('Y-m-d H:i:s', strtotime($row['wkt_input'])) : '';
+            
             $resultData[] = [
                 $no,
                 $row['no_po'],
                 $row['kode_customer'],
                 $row['customer_name'],
-                $row['wkt_input'],
+                $formattedDate, // Kirim dalam format ISO untuk sorting yang konsisten
                 $status,
                 '<a href="/backend/transaksi/detail/'.esc($row['id']).'" class="btn btn-sm btn-info">Detail</a>'
             ];
@@ -268,5 +224,212 @@ class TransaksiController extends BaseController
             'errors' => $errors, // Teruskan array errors ke view
             'customers' => $customers
         ]);
+    }
+
+    /**
+     * Apply role-based access control filtering
+     * 
+     * @param object $builder Query builder instance
+     * @param UserModel $userModel User model instance
+     * @param int $pic_input Current user ID
+     * @return void
+     */
+    private function applyRoleBasedFiltering($builder, UserModel $userModel, int $pic_input): void
+    {
+        $userRoles = $userModel->getRoles($pic_input);
+        $roleNames = array_column($userRoles, 'name');
+        
+        if (in_array('Store Pic', $roleNames)) {
+            $this->applyStorePicFiltering($builder, $userModel, $pic_input);
+        } elseif (in_array('Super Admin', $roleNames)) {
+            // Super Admin can see all transactions - no additional filtering needed
+            return;
+        } elseif (in_array('Admin', $roleNames)) {
+            // Super Admin can see all transactions - no additional filtering needed
+            return;
+        } else {
+            // Default: only show own transactions
+            $builder->where('pic_input', $pic_input);
+        }
+    }
+
+    /**
+     * Apply Store Pic specific filtering based on group membership
+     * 
+     * @param object $builder Query builder instance
+     * @param UserModel $userModel User model instance
+     * @param int $pic_input Current user ID
+     * @return void
+     */
+    private function applyStorePicFiltering($builder, UserModel $userModel, int $pic_input): void
+    {
+        $userData = $userModel->select('kode_group')->where('id', $pic_input)->first();
+        $userGroup = $userData['kode_group'] ?? null;
+        
+        if (!$userGroup) {
+            // No group assigned, fallback to own transactions only
+            $builder->where('pic_input', $pic_input);
+            return;
+        }
+        
+        try {
+            $dbStore = \Config\Database::connect('db_tol');
+            $storeQuery = "SELECT customer_id FROM db_tol.mst_customer WHERE group_customer = ?";
+            $storeResults = $dbStore->query($storeQuery, [$userGroup])->getResult();
+            
+            if (empty($storeResults)) {
+                // No stores found for this group, fallback to own transactions
+                $builder->where('pic_input', $pic_input);
+                return;
+            }
+            
+            $storeIds = array_map(function($row) { 
+                return $row->customer_id; 
+            }, $storeResults);
+            $builder->whereIn('customer_id', $storeIds);
+            
+        } catch (\Exception $e) {
+            log_message('error', '[Store Pic Filtering] Database error: ' . $e->getMessage());
+            // On error, fallback to own transactions only
+            $builder->where('pic_input', $pic_input);
+        }
+    }
+
+    /**
+     * Apply custom filters from request parameters
+     * 
+     * @param object $builder Query builder instance
+     * @param object $request Request instance
+     * @return void
+     */
+    private function applyCustomFilters($builder, $request): void
+    {
+        // Filter berdasarkan group store
+        $filterGroup = $request->getGet('filter_group');
+        if ($filterGroup) {
+            // Ambil semua customer_id dari group yang dipilih
+            $db = \Config\Database::connect('db_tol');
+            $storeResults = $db->query('SELECT customer_id FROM mst_customer WHERE group_customer = ?', [$filterGroup])->getResult();
+            $storeIds = array_map(function($row) { return $row->customer_id; }, $storeResults);
+            if (!empty($storeIds)) {
+                $builder->whereIn('transaction_pr_h_apis.customer_id', $storeIds);
+            } else {
+                // Jika tidak ada store, filter kosong
+                $builder->where('transaction_pr_h_apis.customer_id', '');
+            }
+        }
+
+        // Filter berdasarkan store
+        $filterStore = $request->getGet('filter_store');
+        if ($filterStore) {
+            $builder->where('transaction_pr_h_apis.customer_id', $filterStore);
+        }
+
+        // Filter status
+        $filterStatus = $request->getGet('filter_status');
+        if ($filterStatus !== null && $filterStatus !== '') {
+            $builder->where('transaction_pr_h_apis.is_proses_tol', $filterStatus);
+        }
+
+        // Filter tanggal
+        $this->applyDateRangeFilter($builder, $request);
+    }
+
+    /**
+     * Apply date range filtering
+     * 
+     * @param object $builder Query builder instance
+     * @param object $request Request instance
+     * @return void
+     */
+    private function applyDateRangeFilter($builder, $request): void
+    {
+        $filterDateFrom = $request->getGet('filter_date_from');
+        $filterDateTo = $request->getGet('filter_date_to');
+
+        if ($filterDateFrom) {
+            $fromDate = \DateTime::createFromFormat('d-m-Y', $filterDateFrom);
+            if ($fromDate) {
+                $builder->where('DATE(wkt_input) >=', $fromDate->format('Y-m-d'));
+            }
+        }
+
+        if ($filterDateTo) {
+            $toDate = \DateTime::createFromFormat('d-m-Y', $filterDateTo);
+            if ($toDate) {
+                $builder->where('DATE(wkt_input) <=', $toDate->format('Y-m-d'));
+            }
+        }
+    }
+
+    /**
+     * Export data transaksi ke CSV
+     */
+    public function exportCsv()
+    {
+        $request = $this->request;
+        $model = new TransaksiWebModel();
+        $userModel = new UserModel();
+        
+        $pic_input = session()->get('user_id');
+        
+        $builder = $model->select('transaction_pr_h_apis.*, users.name as customer_name, users.kode_customer')
+            ->join('users', 'users.id = transaction_pr_h_apis.pic_input', 'left');
+
+        // Apply role-based filtering
+        $this->applyRoleBasedFiltering($builder, $userModel, $pic_input);
+        
+        // Apply custom filters (menggunakan filter group dan store)
+        $this->applyCustomFilters($builder, $request);
+
+        // Apply search filter jika ada
+        $search = $request->getGet('search');
+        if ($search) {
+            $builder->groupStart()
+                ->like('no_po', $search)
+                ->orLike('users.name', $search)
+                ->orLike('users.kode_customer', $search)
+                ->orLike('transaction_pr_h_apis.customer_id', $search)
+                ->groupEnd();
+        }
+
+        $builder->orderBy('wkt_input', 'desc');
+        $data = $builder->get()->getResultArray();
+        
+        // Set header untuk download CSV
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=transaksi_export_' . date('Y-m-d_H-i-s') . '.csv');
+        
+        $output = fopen('php://output', 'w');
+        
+        // Header CSV
+        fputcsv($output, [
+            'No PO',
+            'Kode Customer', 
+            'Nama Customer',
+            'Tanggal Input',
+            'Status',
+            'Hanya Jasa',
+            'Jenis Lensa'
+        ]);
+        
+        // Data CSV
+        foreach ($data as $row) {
+            $status = ($row['is_proses_tol'] == 1) ? 'Sudah' : 'Proses';
+            $hanjaJasa = ($row['hanya_jasa'] == 1) ? 'Ya' : 'Tidak';
+            
+            fputcsv($output, [
+                $row['no_po'],
+                $row['kode_customer'],
+                $row['customer_name'],
+                $row['wkt_input'],
+                $status,
+                $hanjaJasa,
+                $row['jenis_lensa'] ?? ''
+            ]);
+        }
+        
+        fclose($output);
+        exit;
     }
 }

@@ -7,6 +7,14 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index'); // Halaman default CI4, bisa dihapus/diubah
 
+// =================================================================
+// HEALTH CHECK ROUTES (Monitoring)
+// =================================================================
+$routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
+    $routes->get('health', 'HealthController::index');
+    $routes->get('ping', 'HealthController::ping');
+});
+
 
 // =================================================================
 // API ROUTES
@@ -151,20 +159,6 @@ $routes->group('api/v1', function ($routes) {
             $routes->delete('/(:num)', 'UserController::deleteApiKey/$1');
         });
 
-        // API Key Management
-        // $routes->get('apikeys', 'AdminController::getApiKeys');
-        // $routes->post('apikeys', 'AdminController::createApiKey');
-        // $routes->put('apikeys/(:num)', 'AdminController::updateApiKey/$1');
-        // $routes->delete('apikeys/(:num)', 'AdminController::deleteApiKey/$1');
-
-
-
-        // $routes->get('apikeys', "{$controllerUser}::getApiKeys", ['filter' => 'permission:manage-api-keys']);
-        // // ... CRUD API Keys lainnya dengan permission:manage-api-keys ...
-        // $routes->post('apikeys', "{$controllerUser}::createApiKey" , ['filter' => 'permission:manage-api-keys']);
-        // $routes->put('apikeys/(:num)', "{$controllerUser}::updateApiKey/$1" , ['filter' => 'permission:manage-api-keys']);
-        // $routes->delete('apikeys/(:num)', "{$controllerUser}::deleteApiKey/$1" , ['filter' => 'permission:manage-api-keys']);
-
         // Transaction Management
         $routes->get('transactions', "{$controllerUser}::getAllTransactions", ['filter' => 'permission:manage-all-transactions']);
         // ... Detail dan update status transaksi lainnya dengan permission:manage-all-transactions ...
@@ -173,6 +167,13 @@ $routes->group('api/v1', function ($routes) {
 
 
         $routes->get('karyawans', 'UserController::getKaryawan');
+        
+        // Audit Log Management
+        $routes->group('audit-logs', ['filter' => 'permission:view-audit-logs'], function ($routes) {
+            $routes->get('/', 'AuditController::getAuditLogs');
+            $routes->get('stats', 'AuditController::getAuditStats');
+            $routes->post('test', 'AuditController::testAuditLog');
+        });
     });
 
 
@@ -203,6 +204,7 @@ $routes->post('/register/get-customer-by-group', 'Backend\AuthController::getCus
 $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' => 'adminAuth'], function ($routes) {
     $routes->get('/', 'DashboardController::index');
     $routes->get('dashboard', 'DashboardController::index');
+    $routes->get('dashboard/getChartData', 'DashboardController::getChartData');
 
     // Ganti Password
     $routes->get('change_password', 'AuthController::changePasswordView');
@@ -262,7 +264,7 @@ $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' =>
         $routes->get('datatables', 'UserController::datatables'); // Rute untuk DataTables
         $routes->get('create', 'UserController::create');
         $routes->post('create', 'UserController::store');
-        $routes->post('get-stores-by-group', 'UserController::getStoresByGroup'); // Rute AJAX
+        $routes->post('get_stores_group', 'UserController::getStoresByGroup'); // Rute AJAX
         $routes->get('edit/(:num)', 'UserController::edit/$1');
         $routes->post('edit/(:num)', 'UserController::update/$1');
         $routes->get('delete/(:num)', 'UserController::delete/$1');
@@ -272,22 +274,33 @@ $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' =>
 
 });
 
+// =================================================================
+// API ROUTES (STATELESS - JWT/API Key AUTH)
+// =================================================================
+
+// Testing routes (temporary)
+$routes->group('test', ['namespace' => 'App\Controllers\Api'], function ($routes) {
+    $routes->get('audit-log', 'TestController::testAuditLog');
+    $routes->get('check-tables', 'TestController::checkTables');
+});
+
+// =================================================================
+// API DOCUMENTATION ROUTES
+// =================================================================
+$routes->group('api/docs', function ($routes) {
+    $routes->get('/', 'Api\DocumentationController::swaggerUI');
+    $routes->get('openapi.json', 'Api\DocumentationController::getOpenAPISpec');
+    $routes->get('markdown', 'Api\DocumentationController::markdownDocs');
+    $routes->get('postman', 'Api\DocumentationController::postmanCollection');
+});
+
+// =================================================================
 // Fallback untuk route tidak ditemukan (404 Not Found)
+// =================================================================
 $routes->set404Override('App\Controllers\CustomErrors::show404');
 
-// $routes->set404Override(function(){
-    //     // Muat helper response kita yang sudah ada
-    //     helper('response');
-        
-    //     // Gunakan helper api_error() untuk membuat objek Response yang konsisten
-    //     $response = api_error('Endpoint Not Found', \CodeIgniter\HTTP\ResponseInterface::HTTP_NOT_FOUND, [
-    //         'route' => 'The requested resource or endpoint does not exist.'
-    //     ]);
-        
-    //     // Kirim respons (header dan body) secara manual ke browser
-    //     $response->send();
-        
-    //     // Hentikan eksekusi skrip agar CodeIgniter tidak mencoba memproses lebih lanjut
-    //     exit();
-// });
+// Test routes
+$routes->get('test/superadmin-permissions', 'TestController::checkSuperAdminPermissions');
+
+// =================================================================
 

@@ -42,8 +42,36 @@ $RECYCLE.BIN/
 # These should never be under version control,
 # as it poses a security risk.
 .env
+.env.local
+.env.production
+.env.staging
 .vagrant
 Vagrantfile
+
+#-------------------------
+# DevOps & Docker Files
+#-------------------------
+# Docker
+.docker/
+docker-compose.override.yml
+.dockerignore
+
+# CI/CD
+deployment.log
+backup_*.sql
+
+# SSH Keys & Certificates
+*.pem
+*.key
+*.crt
+*.csr
+id_rsa*
+known_hosts
+
+# Secrets & Credentials
+secrets/
+credentials/
+*.secret
 
 #-------------------------
 # Temporary Files
