@@ -127,3 +127,27 @@ jobs:
           docker-compose -f docker-compose.$ENV.yml exec -T php-fpm php spark cache:clear
           
           echo "Deployment to $ENV completed successfully!"
+
+  # Job 3: Deploy ke Demo VPS (aaPanel environment)
+  deploy-demo:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Deploy to Demo VPS
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.DEMO_VPS_HOST }}
+        username: ${{ secrets.DEMO_VPS_USERNAME }}
+        key: ${{ secrets.DEMO_VPS_SSH_KEY }}
+        script: |
+          echo "🚀 Deploying to Demo VPS with aaPanel..."
+          
+          # Download and run deployment script
+          curl -sSL https://raw.githubusercontent.com/solusiitkreasi/ci4-api-jwt/master/scripts/deploy-demo-vps.sh -o deploy-demo.sh
+          chmod +x deploy-demo.sh
+          ./deploy-demo.sh deploy
+          
+          echo "✅ Demo deployment completed!"
+          echo "🔗 Access: https://demo.enampuluhenam.web.id"
