@@ -1,0 +1,34 @@
+# CodeIgniter 4 Root .htaccess
+# Redirect all requests to public folder
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Handle Angular HTML5 Mode and General Requests
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/$1 [QSA,L]
+</IfModule>
+
+# Security: Deny access to sensitive files
+<Files "composer.*">
+    Require all denied
+</Files>
+<Files ".env*">
+    Require all denied
+</Files>
+<Files "*.php">
+    <RequireAll>
+        Require all denied
+        Require file public/index.php
+    </RequireAll>
+</Files>
+
+# Prevent access to vendor directory
+RedirectMatch 403 ^/vendor/.*$
+
+# Prevent access to writable directory
+RedirectMatch 403 ^/writable/.*$
+
+# Prevent access to tests directory  
+RedirectMatch 403 ^/tests/.*$
