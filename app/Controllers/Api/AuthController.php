@@ -161,18 +161,22 @@ class AuthController extends BaseController
         ];
         $token = $this->jwtService->encode($payload);
 
+        // Generate refresh token
+        $refreshModel = new \App\Models\JwtRefreshTokenModel();
+        $refreshToken = bin2hex(random_bytes(40));
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+7 days'));
+        $refreshModel->insert([
+            'user_id' => $user['id'],
+            'refresh_token' => $refreshToken,
+            'expires_at' => $expiresAt,
+            'created_at' => date('Y-m-d H:i:s'),
+            'revoked' => false,
+        ]);
+
         // Log successful login
-        $this->auditLogService->logAction(
-            $user['id'],
-            'LOGIN',
-            'auth',
-            null,
-            null,
-            [
-                'login_method' => 'password',
-                'user_agent' => $this->request->getUserAgent()->getAgentString()
-            ]
-        );
+        if (function_exists('log_audit')) {
+            log_audit($user['id'], 'LOGIN', 'User login');
+        }
 
         // Siapkan data user untuk response (tanpa password)
         $userResponse = [
@@ -180,11 +184,13 @@ class AuthController extends BaseController
             'name'  => $user['name'],
             'email' => $user['email'],
             'roles' => $this->userModel->getRoles($user['id']), // Kirim roles user saat login
-            // 'permission' => $this->userModel->getPermissions($user['id']) // Opsional, bisa banyak
         ];
 
-        return api_response(['token' => $token, 'user' => $userResponse], 'Login successful');
-
+        return api_response([
+            'token' => $token,
+            'refresh_token' => $refreshToken,
+            'user' => $userResponse
+        ], 'Login successful');
     }
 
     public function forgotPassword()
@@ -256,41 +262,35 @@ class AuthController extends BaseController
 
     public function logout()
     {
-        // Dengan filter jwtAuth, $this->currentUser seharusnya sudah terisi
-        // atau $request->user sudah tersedia.
         $userFromRequest = $this->request->user; // Di set oleh JWTAuthFilter
 
         if (!$userFromRequest) {
-            // Ini sebagai fallback, seharusnya tidak terjadi jika filter jwtAuth bekerja
             log_message('error', '[AuthController::logout] User data not found on request object. Is JWTAuthFilter correctly applied and functioning for this route?');
             return api_error('User not authenticated or token processing issue.', ResponseInterface::HTTP_UNAUTHORIZED);
         }
-        
-        // Untuk pendekatan sederhana (client-side invalidation):
-        // Server tidak perlu melakukan apa-apa selain mengakui permintaan logout.
-        // Klien bertanggung jawab untuk menghapus token.
 
-        // Jika Anda ingin implementasi server-side blacklisting (lebih kompleks):
-        // 1. Ambil token dari header: $authHeader = $this->request->getHeaderLine('Authorization'); ... $token = $matches[1];
-        // 2. Dapatkan JTI (JWT ID) dari $decodedToken->jti jika Anda menyertakannya saat pembuatan token.
-        // 3. Simpan JTI atau token signature ke blacklist (misal: Redis, DB) dengan masa berlaku = sisa masa berlaku token.
-        // 4. Modifikasi JWTAuthFilter untuk mengecek blacklist.
-        // Contoh sederhana (tanpa blacklist):
+        // Ambil token dari header Authorization
+        $authHeader = $this->request->getHeaderLine('Authorization');
+        $token = null;
+        if (preg_match('/Bearer\s(.*)/', $authHeader, $matches)) {
+            $token = $matches[1];
+        }
+        if ($token) {
+            // Blacklist token (revoke)
+            $revokedModel = new \App\Models\JwtRevokedTokenModel();
+            $revokedModel->insert([
+                'token' => $token,
+                'revoked_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
         $userName = $userFromRequest->name ?? $userFromRequest->email ?? 'User';
         log_message('info', "User '{$userName}' (ID: {$userFromRequest->id}) logged out.");
 
         // Log logout activity
-        $this->auditLogService->logAction(
-            $userFromRequest->id,
-            'LOGOUT',
-            'auth',
-            null,
-            null,
-            [
-                'logout_method' => 'api',
-                'user_agent' => $this->request->getUserAgent()->getAgentString()
-            ]
-        );
+        if (function_exists('log_audit')) {
+            log_audit($userFromRequest->id, 'LOGOUT', 'User logout');
+        }
 
         return api_response(null, 'Logout successful. Please discard your token.');
     }
@@ -434,6 +434,80 @@ class AuthController extends BaseController
         send_email($email, 'Aktivasi Akun', $emailBody);
 
         return $this->respond(['status' => 'success', 'message' => 'Silakan cek email untuk aktivasi akun.']);
+    }
+
+    /**
+     * Refresh JWT access token using a valid refresh token
+     * POST /api/v1/auth/refresh
+     * Body: { refresh_token: string }
+     */
+    public function refreshToken()
+    {
+        $refreshToken = $this->request->getVar('refresh_token');
+        if (!$refreshToken) {
+            return api_error('Refresh token is required', 400);
+        }
+
+        $refreshModel = new \App\Models\JwtRefreshTokenModel();
+        $revokedModel = new \App\Models\JwtRevokedTokenModel();
+        $userModel = new \App\Models\UserModel();
+
+        $tokenRow = $refreshModel->where('refresh_token', $refreshToken)
+            ->where('expires_at >=', date('Y-m-d H:i:s'))
+            ->where('revoked', false)
+            ->first();
+
+        if (!$tokenRow) {
+            return api_error('Invalid or expired refresh token', 401);
+        }
+
+        // Optional: Cek apakah refresh token sudah direvoke (extra safety)
+        $revoked = $revokedModel->where('token', $refreshToken)->first();
+        if ($revoked) {
+            return api_error('Refresh token has been revoked', 401);
+        }
+
+        // Ambil user
+        $user = $userModel->find($tokenRow['user_id']);
+        if (!$user) {
+            return api_error('User not found', 404);
+        }
+
+        // Generate access token baru
+        $payload = [
+            'user_id' => $user['id'],
+            'email'   => $user['email'],
+        ];
+        $accessToken = $this->jwtService->encode($payload);
+
+        // Generate refresh token baru
+        $newRefreshToken = bin2hex(random_bytes(40));
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+7 days'));
+        $refreshModel->insert([
+            'user_id' => $user['id'],
+            'refresh_token' => $newRefreshToken,
+            'expires_at' => $expiresAt,
+            'created_at' => date('Y-m-d H:i:s'),
+            'revoked' => false,
+        ]);
+
+        // Tandai refresh token lama sebagai revoked
+        $refreshModel->update($tokenRow['id'], ['revoked' => true]);
+        $revokedModel->insert([
+            'token' => $refreshToken,
+            'revoked_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        // Log aktivitas refresh
+        if (function_exists('log_audit')) {
+            log_audit($user['id'], 'REFRESH_TOKEN', 'User refreshed JWT token');
+        }
+
+        return api_response([
+            'access_token' => $accessToken,
+            'refresh_token' => $newRefreshToken,
+            'expires_in' => getenv('jwt.expirationTime') ?: 3600,
+        ], 'Token refreshed successfully');
     }
 
 }

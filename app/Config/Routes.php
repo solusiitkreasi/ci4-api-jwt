@@ -28,7 +28,9 @@ $routes->group('api/v1', function ($routes) {
         $routes->post('login', 'AuthController::login');
         $routes->post('forgot-password', 'AuthController::forgotPassword');
         $routes->post('reset-password', 'AuthController::resetPassword'); // Biasanya ada token di URL atau body
+
         $routes->post('logout', 'AuthController::logout', ['filter' => 'jwtAuth']);
+        $routes->post('refresh', 'AuthController::refreshToken');
 
         $routes->post('forgot-password-mail', 'AuthController::forgotPasswordMail');
         $routes->post('reset-password-mail', 'AuthController::resetPasswordMail');

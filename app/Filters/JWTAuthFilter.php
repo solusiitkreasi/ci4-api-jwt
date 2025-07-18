@@ -55,6 +55,13 @@ class JWTAuthFilter implements FilterInterface
             return api_error('User associated with this token not found.', ResponseInterface::HTTP_UNAUTHORIZED);
         }
 
+        // Cek apakah token sudah di-blacklist (revoked)
+        $revokedModel = new \App\Models\JwtRevokedTokenModel();
+        $revoked = $revokedModel->where('token', $token)->first();
+        if ($revoked) {
+            return api_error('Token has been revoked (blacklisted).', ResponseInterface::HTTP_UNAUTHORIZED);
+        }
+
 
         // Hapus password dari data user yang akan disimpan di request
         unset($user['password']);

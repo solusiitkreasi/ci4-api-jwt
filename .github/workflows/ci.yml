@@ -1,0 +1,41 @@
+# GitHub Actions CI/CD Pipeline for CodeIgniter 4 API
+# Simpan file ini sebagai .github/workflows/ci.yml di root repo Anda
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, pdo, pdo_mysql, curl, json, dom
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy .env.example to .env
+        run: |
+          if [ -f .env.example ]; then cp .env.example .env; fi
+
+      - name: Run CodeIgniter 4 migrations (optional)
+        run: php spark migrate --all
+
+      - name: Run tests (PHPUnit)
+        run: vendor/bin/phpunit --configuration phpunit.xml.dist
+
+      # Deploy step bisa ditambah sesuai kebutuhan (FTP, SSH, rsync, dsb)
+      # - name: Deploy to server
+      #   run: ...
