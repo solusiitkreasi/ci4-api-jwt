@@ -131,6 +131,8 @@
 <script src="<?= base_url('assets/admin/') ?>js/forms/controls.select2.js"></script>
 
 <!-- Page Specific Scripts Start -->
+<script src="<?= base_url('assets/admin/') ?>js/auth-handler.js"></script>
+<script src="<?= base_url('assets/admin/') ?>js/web-auth-handler.js"></script>
 <script src="<?= base_url('assets/admin/') ?>js/common.js"></script>
 <script src="<?= base_url('assets/admin/') ?>js/scripts.js"></script>
 <!-- Page Specific Scripts End -->

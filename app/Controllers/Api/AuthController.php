@@ -174,9 +174,8 @@ class AuthController extends BaseController
         ]);
 
         // Log successful login
-        if (function_exists('log_audit')) {
-            log_audit($user['id'], 'LOGIN', 'User login');
-        }
+        $auditService = new \App\Services\AuditLogService();
+        $auditService->logAction($user['id'], 'LOGIN', 'auth', null, null, null);
 
         // Siapkan data user untuk response (tanpa password)
         $userResponse = [
@@ -288,9 +287,8 @@ class AuthController extends BaseController
         log_message('info', "User '{$userName}' (ID: {$userFromRequest->id}) logged out.");
 
         // Log logout activity
-        if (function_exists('log_audit')) {
-            log_audit($userFromRequest->id, 'LOGOUT', 'User logout');
-        }
+        $auditService = new \App\Services\AuditLogService();
+        $auditService->logAction($userFromRequest->id, 'LOGOUT', 'auth', null, null, null);
 
         return api_response(null, 'Logout successful. Please discard your token.');
     }
@@ -499,9 +497,8 @@ class AuthController extends BaseController
         ]);
 
         // Log aktivitas refresh
-        if (function_exists('log_audit')) {
-            log_audit($user['id'], 'REFRESH_TOKEN', 'User refreshed JWT token');
-        }
+        $auditService = new \App\Services\AuditLogService();
+        $auditService->logAction($user['id'], 'REFRESH_TOKEN', 'auth', null, null, null);
 
         return api_response([
             'access_token' => $accessToken,

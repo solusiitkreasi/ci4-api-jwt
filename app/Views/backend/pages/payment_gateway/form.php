@@ -2,6 +2,7 @@
 <?= $this->section('content') ?>
 <h1 class="h3 mb-3"><?= $gateway ? 'Edit' : 'Tambah' ?> Payment Gateway</h1>
 <form method="post" action="<?= $gateway ? base_url('backend/payment-gateway/update/'.$gateway['id']) : base_url('backend/payment-gateway/store') ?>">
+    <?= csrf_field() ?>
     <div class="mb-3">
         <label class="form-label">Provider</label>
         <select name="provider" class="form-select" required <?= $gateway ? 'readonly disabled' : '' ?>>

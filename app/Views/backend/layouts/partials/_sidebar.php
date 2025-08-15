@@ -44,47 +44,6 @@
               
               echo $menu_sidebar; ?>
 
-            <!-- <ul id="menu" class="menu">
-                  
-                <li>
-                  <a href="<?= base_url('backend/dashboard'); ?>">
-                    <i data-acorn-icon="shop" class="icon" data-acorn-size="18"></i>
-                    <span class="label">Dashboard</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="#products" data-href="Products.html">
-                    <i data-acorn-icon="cupcake" class="icon" data-acorn-size="18"></i>
-                    <span class="label">Master Data</span>
-                  </a>
-                  <ul id="products">
-                    <li>
-                      <a href="Products.List.html">
-                        <span class="label">List</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="Products.Detail.html">
-                        <span class="label">Detail</span>
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                
-                <li>
-                  <a href="<?= base_url('backend/transaksi'); ?>">
-                    <i data-acorn-icon="cart" class="icon" data-acorn-size="18"></i>
-                    <span class="label">Transaksi</span>
-                  </a>
-                </li>
-
-                <li>
-                  <a href="Settings.html">
-                    <i data-acorn-icon="gear" class="icon" data-acorn-size="18"></i>
-                    <span class="label">Settings</span>
-                  </a>
-                </li>
-            </ul> -->
           </div>
         <!-- Menu End -->
 

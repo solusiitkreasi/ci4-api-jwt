@@ -32,20 +32,6 @@ $user_id = isset($user_id) ? $user_id : null;
         opacity: 0.6;
     }
     
-    /* Styling untuk field readonly (Free Form fields) */
-    select[readonly] {
-        background-color: #e9ecef !important;
-        cursor: not-allowed !important;
-        opacity: 0.8;
-        pointer-events: none;
-    }
-    
-    select[readonly]:focus {
-        background-color: #e9ecef !important;
-        box-shadow: none !important;
-        border-color: #ced4da !important;
-    }
-    
     /* Loading state untuk cylinder select */
     .select2-container.loading-cylinder .select2-selection {
         background: linear-gradient(90deg, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%);
@@ -102,7 +88,16 @@ $user_id = isset($user_id) ? $user_id : null;
             <ul class="mb-0 mt-2">
             <?php foreach ($errors as $key => $err): ?>
                 <?php if ($key === 'no_po_exists') continue; ?>
-                <li><b><?= esc($err) ?></b></li>
+                <?php
+                    $label = $key === 'no_po' ? 'Nomor Nota' : $key;
+                ?>
+                <?php if (is_array($err)): ?>
+                    <?php foreach ($err as $suberr): ?>
+                        <li><b><?= esc($label) ?></b>: <?= esc($suberr) ?></li>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <li><b><?= esc($label) ?></b>: <?= esc($err) ?></li>
+                <?php endif; ?>
             <?php endforeach; ?>
             </ul>
         <?php endif; ?>
@@ -126,7 +121,7 @@ $user_id = isset($user_id) ? $user_id : null;
             <div class="row mb-3">
                 <div class="col-md-3">
                     <label class="form-label">NOTA PESAN</label>
-                    <input type="text" class="form-control" name="data_lensa[no_po]" value="<?= isset($errors) && isset($_POST['data_lensa']['no_po']) ? esc($_POST['data_lensa']['no_po']) : '' ?>">
+                    <input type="text" class="form-control" name="data_lensa[no_po]" required value="<?= isset($errors) && isset($_POST['data_lensa']['no_po']) ? esc($_POST['data_lensa']['no_po']) : '' ?>">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">SALESMAN</label>
@@ -146,7 +141,7 @@ $user_id = isset($user_id) ? $user_id : null;
             <div class="row mb-3">
                 <div class="col-md-3">
                     <label class="form-label">PELANGGAN</label>
-                    <input type="text" class="form-control" name="data_lensa[nama_customer]" value="<?= isset($errors) && isset($_POST['data_lensa']['nama_customer']) ? esc($_POST['data_lensa']['nama_customer']) : '' ?>">
+                    <input type="text" class="form-control" name="data_lensa[nama_customer]" required value="<?= isset($errors) && isset($_POST['data_lensa']['nama_customer']) ? esc($_POST['data_lensa']['nama_customer']) : '' ?>">
                 </div>
                 
                 <div class="col-md-3">
@@ -174,7 +169,7 @@ $user_id = isset($user_id) ? $user_id : null;
 
             <br><hr>
             <div class="mb-3">
-                <label class="form-label text-primary mb-1"><strong>HANYA JASA?</strong></label>
+                <label class="label"><strong>HANYA JASA?</strong></label>
                 <select class="form-select" id="hanya_jasa" name="data_lensa[hanya_jasa]">
                     <option value="0" <?= (isset($errors) && isset($_POST['data_lensa']['hanya_jasa']) && $_POST['data_lensa']['hanya_jasa'] == '0') ? 'selected' : '' ?>>Tidak</option>
                     <option value="1" <?= (isset($errors) && isset($_POST['data_lensa']['hanya_jasa']) && $_POST['data_lensa']['hanya_jasa'] == '1') ? 'selected' : '' ?>>Ya</option>
@@ -200,7 +195,7 @@ $user_id = isset($user_id) ? $user_id : null;
                 <hr>
                 <div class="row mb-4">
                     <div class="col-md-3">
-                        <label class="form-label text-primary"><b>Kode Brand</b></label>
+                        <label class="form-label"><b>Kode Brand</b></label>
                         <select class="form-select" id="kd_brand" name="data_lensa[kd_brand]">
                             <option value="">--Pilih Kode Brand --</option>
                             <option value="CZ">Carl Zeiss</option>
@@ -209,149 +204,149 @@ $user_id = isset($user_id) ? $user_id : null;
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label text-primary"><b>Jenis Lensa</b></label>
-                        <select class="form-select" id="jenis_lensa" name="data_lensa[jenis_lensa]">
-                            <option value="">-- Pilih Jenis Lensa --</option>
-                            <option value="BF">BIFOCAL</option>
-                            <option value="OL">OFFICELENS</option>
-                            <option value="PG">PROGRESSIVE</option>
-                            <option value="PF">PROGRESSIVE FREE FORM</option>
-                            <option value="SV">SINGLE VISION</option>
-                            <option value="SF">SINGLE VISION FREE FORM</option>
-                        </select>
-                    </div>
+                        <label class="form-label"><b>Jenis Lensa</b></label>
+                    <select class="form-select" id="jenis_lensa" name="data_lensa[jenis_lensa]">
+                        <option value="">-- Pilih Jenis Lensa --</option>
+                        <option value="BF">BIFOCAL</option>
+                        <option value="OL">OFFICELENS</option>
+                        <option value="PG">PROGRESSIVE</option>
+                        <option value="PF">PROGRESSIVE FREE FORM</option>
+                        <option value="SV">SINGLE VISION</option>
+                        <option value="SF">SINGLE VISION FREE FORM</option>
+                    </select>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label text-primary"><b>Data Lensa</b></label>
-                    <div class="table-responsive" style="overflow-x:auto; max-width:100vw;">
-                        <table class="table table-bordered align-middle mb-0" style="min-width:1200px; max-width:100%;" id="lensa-table">
-                            <thead class="table-light">
-                                <tr>
-                                    <th></th>
-                                    <th>Kode Lensa</th>
-                                    <th>Nama Lensa</th>
-                                    <th>Sph</th>
-                                    <th>Cyl</th>
-                                    <th>Axs</th>
-                                    <th>Add</th>
-                                    <th>Prisma1</th>
-                                    <th>Base1</th>
-                                    <th>Prisma2</th>
-                                    <th>Base2</th>
-                                    <th>Base Curve</th>
-                                    <th>PDF</th>
-                                    <th>PDN</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>R</td>
-                                    <td>
-                                        <div class="input-group input-group-sm flex-nowrap" style="width:220px;">
-                                            <button type="button" class="btn btn-outline-primary" style="width:48px;padding:2px 6px;" onclick="openLensaModal('r_lensa','r_nama_lensa')">Pilih</button>
-                                            <input type="text" class="form-control" style="width:60px;padding-right:2px;padding-left:2px;" name="data_lensa[r_lensa]" id="r_lensa" readonly onchange="updateNamaLensa('r_lensa','r_nama_lensa')" placeholder="Kode Lensa">
-                                            <button type="button" class="btn btn-outline-danger" style="width:50px;padding:2px 6px;" onclick="clearLensa('r_lensa','r_nama_lensa')">&times; Batal</button>
-                                        </div>
-                                    </td>
-                                    <td><input type="text" class="form-control" style="min-width:200px;max-width:350px;" name="data_lensa[r_nama_lensa]" id="r_nama_lensa" readonly placeholder="Nama Lensa"></td>
-                                    <td>
-                                        <select class="form-select" id="r_spheris" name="data_lensa[r_spheris]" style="min-width:200px;max-width:350px;" >
-                                            <option value="">Pilih Lensa R dulu</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" id="r_cylinder" name="data_lensa[r_cylinder]" style="min-width:200px;max-width:350px;pointer-events:none;background:#eee;"  >
-                                            <option value="">Pilih Lensa & Sph dulu</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" id="r_axis" name="data_lensa[r_axis]" style="min-width:90px;max-width:140px;pointer-events:none;background:#eee;" >
-                                            <option value="">Pilih Cylinder dulu</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" id="r_add" name="data_lensa[r_add]" style="min-width:90px;max-width:140px;pointer-events:none;background:#eee;" >
-                                            <option value="">Pilih Cylinder dulu</option>
-                                        </select>
-                                    </td>
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><b>Data Lensa</b></label>
+                <div class="table-responsive" style="overflow-x:auto; max-width:100vw;">
+                    <table class="table table-bordered align-middle mb-0" style="min-width:1200px; max-width:100%;" id="lensa-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th></th>
+                                <th>Kode Lensa</th>
+                                <th>Nama Lensa</th>
+                                <th>Sph</th>
+                                <th>Cyl</th>
+                                <th>Axs</th>
+                                <th>Add</th>
+                                <th>Prisma1</th>
+                                <th>Base1</th>
+                                <th>Prisma2</th>
+                                <th>Base2</th>
+                                <th>Base Curve</th>
+                                <th>PDF</th>
+                                <th>PDN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>R</td>
+                                <td>
+                                    <div class="input-group input-group-sm flex-nowrap" style="width:220px;">
+                                        <button type="button" class="btn btn-outline-primary" style="width:48px;padding:2px 6px;" onclick="openLensaModal('r_lensa','r_nama_lensa')">Pilih</button>
+                                        <input type="text" class="form-control" style="width:60px;padding-right:2px;padding-left:2px;" name="data_lensa[r_lensa]" id="r_lensa" readonly onchange="updateNamaLensa('r_lensa','r_nama_lensa')" placeholder="Kode Lensa">
+                                        <button type="button" class="btn btn-outline-danger" style="width:50px;padding:2px 6px;" onclick="clearLensa('r_lensa','r_nama_lensa')">&times; Batal</button>
+                                    </div>
+                                </td>
+                                <td><input type="text" class="form-control" style="min-width:200px;max-width:350px;" name="data_lensa[r_nama_lensa]" id="r_nama_lensa" readonly placeholder="Nama Lensa"></td>
+                                <td>
+                                    <select class="form-select" id="r_spheris" name="data_lensa[r_spheris]" style="min-width:200px;max-width:350px;" >
+                                        <option value="">Pilih Lensa R dulu</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select" id="r_cylinder" name="data_lensa[r_cylinder]" style="min-width:200px;max-width:350px;pointer-events:none;background:#eee;"  >
+                                        <option value="">Pilih Lensa & Sph dulu</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select" id="r_axis" name="data_lensa[r_axis]" style="min-width:90px;max-width:140px;pointer-events:none;background:#eee;" >
+                                        <option value="">Pilih Cylinder dulu</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select" id="r_add" name="data_lensa[r_add]" style="min-width:90px;max-width:140px;pointer-events:none;background:#eee;" >
+                                        <option value="">Pilih Cylinder dulu</option>
+                                    </select>
+                                </td>
 
-                                    <td>
-                                        <select class="form-select" id="r_prisma" name="data_lensa[r_prisma]" style="min-width:90px;max-width:140px;" disabled>
-                                            <option value="">Pilih Cylinder dulu</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" id="r_base" name="data_lensa[r_base]" style="min-width:90px;max-width:140px;" disabled>
-                                            <option value="">Pilih Cylinder dulu</option>
-                                        </select>
-                                    </td>
-                                    <td><input type="number" class="form-control" id="r_prisma2" style="min-width:90px;max-width:140px;" name="data_lensa[r_prisma2]" value="0" disabled /></td>
-                                    <td><input type="number" class="form-control" id="r_base2" style="min-width:90px;max-width:140px;" name="data_lensa[r_base2]" value="0" disabled /></td>
-                                    <td><input type="number" class="form-control" id="r_base_curve" style="min-width:90px;max-width:140px;" name="data_lensa[r_base_curve]" value="0" disabled /></td>
+                                <td>
+                                    <select class="form-select" id="r_prisma" name="data_lensa[r_prisma]" style="min-width:90px;max-width:140px;" disabled>
+                                        <option value="">Pilih Cylinder dulu</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select" id="r_base" name="data_lensa[r_base]" style="min-width:90px;max-width:140px;" disabled>
+                                        <option value="">Pilih Cylinder dulu</option>
+                                    </select>
+                                </td>
+                                <td><input type="number" class="form-control" id="r_prisma2" style="min-width:90px;max-width:140px;" name="data_lensa[r_prisma2]" value="0" disabled /></td>
+                                <td><input type="number" class="form-control" id="r_base2" style="min-width:90px;max-width:140px;" name="data_lensa[r_base2]" value="0" disabled /></td>
+                                <td><input type="number" class="form-control" id="r_base_curve" style="min-width:90px;max-width:140px;" name="data_lensa[r_base_curve]" value="0" disabled /></td>
 
-                                    <td><input type="number" class="form-control" id="r_pd_far" style="min-width:90px;max-width:140px;" name="data_lensa[r_pd_far]" value="0" disabled /></td>
-                                    <td><input type="number" class="form-control" id="r_pd_near" style="min-width:90px;max-width:140px;" name="data_lensa[r_pd_near]" value="0" disabled /></td>
-                                </tr>
-                                <tr>
-                                    <td>L</td>
-                                    <td>
-                                        <div class="input-group input-group-sm flex-nowrap" style="width:220px;">                                        
-                                            <button type="button" class="btn btn-outline-primary" style="width:48px;padding:2px 6px;" onclick="openLensaModal('l_lensa','l_nama_lensa')">Pilih</button>
-                                            <input type="text" class="form-control" style="width:60px;padding-right:2px;padding-left:2px;" name="data_lensa[l_lensa]" id="l_lensa" readonly onchange="updateNamaLensa('l_lensa','l_nama_lensa')" placeholder="Kode Lensa">
-                                            <button type="button" class="btn btn-outline-danger" style="width:50px;padding:2px 6px;" onclick="clearLensa('l_lensa','l_nama_lensa')">&times; Batal</button>
-                                        </div>
-                                    </td>
-                                    <td><input type="text" class="form-control" style="min-width:200px;max-width:350px;" name="data_lensa[l_nama_lensa]" id="l_nama_lensa" readonly placeholder="Nama Lensa"></td>
-                                    <td>
-                                        <select class="form-select" style="min-width:200px;max-width:350px;pointer-events:none;background:#eee;" id="l_spheris" name="data_lensa[l_spheris]" readonly>
-                                            <option value="">Pilih Lensa L dulu</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" style="min-width:200px;max-width:350px;pointer-events:none;background:#eee;" id="l_cylinder" name="data_lensa[l_cylinder]" readonly>
-                                            <option value="">Pilih Lensa & Sph dulu</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" id="l_axis" name="data_lensa[l_axis]" style="min-width:90px;max-width:140px;pointer-events:none;background:#eee;" readonly>
-                                            <option value="">Pilih Cylinder dulu</option>
-                                        </select>
-                                    </td>
-        
-                                    <td>
-                                        <select class="form-select" id="l_add" name="data_lensa[l_add]" style="min-width:90px;max-width:140px;pointer-events:none;background:#eee;" readonly>
-                                            <option value="">Pilih Cylinder dulu</option>
-                                        </select>
-                                    </td>
-                                    
-                                    <td>
-                                        <select class="form-select" id="l_prisma" name="data_lensa[l_prisma]" style="min-width:90px;max-width:140px;" disabled>
-                                            <option value="">Pilih Cylinder dulu</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-select" id="l_base" name="data_lensa[l_base]" style="min-width:90px;max-width:140px;" disabled>
-                                            <option value="">Pilih Cylinder dulu</option>
-                                        </select>
-                                    </td>
-        
-                                    <td><input type="number" class="form-control" id="l_prisma2" style="min-width:90px;max-width:140px;" name="data_lensa[l_prisma2]" value="0" disabled /></td>
-                                    <td><input type="number" class="form-control" id="l_base2" style="min-width:90px;max-width:140px;" name="data_lensa[l_base2]" value="0" disabled /></td>
-                                    <td><input type="number" class="form-control" id="l_base_curve" style="min-width:90px;max-width:140px;" name="data_lensa[l_base_curve]" value="0" disabled /></td>
-                                    <td><input type="number" class="form-control" id="l_pd_far" style="min-width:90px;max-width:140px;" name="data_lensa[l_pd_far]" value="0" disabled /></td>
-                                    <td><input type="number" class="form-control" id="l_pd_near" style="min-width:90px;max-width:140px;" name="data_lensa[l_pd_near]" value="0" disabled /></td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th colspan="12" class="text-end">Total</th>
-                                    <th id="total_pd_far">0</th>
-                                    <th id="total_pd_near">0</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+                                <td><input type="number" class="form-control" id="r_pd_far" style="min-width:90px;max-width:140px;" name="data_lensa[r_pd_far]" value="0" disabled /></td>
+                                <td><input type="number" class="form-control" id="r_pd_near" style="min-width:90px;max-width:140px;" name="data_lensa[r_pd_near]" value="0" disabled /></td>
+                            </tr>
+                            <tr>
+                                <td>L</td>
+                                <td>
+                                    <div class="input-group input-group-sm flex-nowrap" style="width:220px;">                                        
+                                        <button type="button" class="btn btn-outline-primary" style="width:48px;padding:2px 6px;" onclick="openLensaModal('l_lensa','l_nama_lensa')">Pilih</button>
+                                        <input type="text" class="form-control" style="width:60px;padding-right:2px;padding-left:2px;" name="data_lensa[l_lensa]" id="l_lensa" readonly onchange="updateNamaLensa('l_lensa','l_nama_lensa')" placeholder="Kode Lensa">
+                                        <button type="button" class="btn btn-outline-danger" style="width:50px;padding:2px 6px;" onclick="clearLensa('l_lensa','l_nama_lensa')">&times; Batal</button>
+                                    </div>
+                                </td>
+                                <td><input type="text" class="form-control" style="min-width:200px;max-width:350px;" name="data_lensa[l_nama_lensa]" id="l_nama_lensa" readonly placeholder="Nama Lensa"></td>
+                                <td>
+                                    <select class="form-select" style="min-width:200px;max-width:350px;pointer-events:none;background:#eee;" id="l_spheris" name="data_lensa[l_spheris]" readonly>
+                                        <option value="">Pilih Lensa L dulu</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select" style="min-width:200px;max-width:350px;pointer-events:none;background:#eee;" id="l_cylinder" name="data_lensa[l_cylinder]" readonly>
+                                        <option value="">Pilih Lensa & Sph dulu</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select" id="l_axis" name="data_lensa[l_axis]" style="min-width:90px;max-width:140px;pointer-events:none;background:#eee;" readonly>
+                                        <option value="">Pilih Cylinder dulu</option>
+                                    </select>
+                                </td>
+    
+                                <td>
+                                    <select class="form-select" id="l_add" name="data_lensa[l_add]" style="min-width:90px;max-width:140px;pointer-events:none;background:#eee;" readonly>
+                                        <option value="">Pilih Cylinder dulu</option>
+                                    </select>
+                                </td>
+                                
+                                <td>
+                                    <select class="form-select" id="l_prisma" name="data_lensa[l_prisma]" style="min-width:90px;max-width:140px;" disabled>
+                                        <option value="">Pilih Cylinder dulu</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select" id="l_base" name="data_lensa[l_base]" style="min-width:90px;max-width:140px;" disabled>
+                                        <option value="">Pilih Cylinder dulu</option>
+                                    </select>
+                                </td>
+    
+                                <td><input type="number" class="form-control" id="l_prisma2" style="min-width:90px;max-width:140px;" name="data_lensa[l_prisma2]" value="0" disabled /></td>
+                                <td><input type="number" class="form-control" id="l_base2" style="min-width:90px;max-width:140px;" name="data_lensa[l_base2]" value="0" disabled /></td>
+                                <td><input type="number" class="form-control" id="l_base_curve" style="min-width:90px;max-width:140px;" name="data_lensa[l_base_curve]" value="0" disabled /></td>
+                                <td><input type="number" class="form-control" id="l_pd_far" style="min-width:90px;max-width:140px;" name="data_lensa[l_pd_far]" value="0" disabled /></td>
+                                <td><input type="number" class="form-control" id="l_pd_near" style="min-width:90px;max-width:140px;" name="data_lensa[l_pd_near]" value="0" disabled /></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="12" class="text-end">Total</th>
+                                <th id="total_pd_far">0</th>
+                                <th id="total_pd_near">0</th>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
+            </div>
             </div> <!-- End lensa-section -->
 
             <div id="free-form-section" style="display: none;">
@@ -410,7 +405,7 @@ $user_id = isset($user_id) ? $user_id : null;
                     <div class="col-md-3 mb-1">
                         <label class="form-label">FFV <small>(Frame Fit Value)</small></label>
                         <select class="form-select" name="data_lensa[ffv]" id="ffv_select">
-                            <?php for ($i = 0; $i <= 10; $i++): ?>
+                            <?php for ($i = 1; $i <= 10; $i++): ?>
                                 <option value="<?= $i ?>"
                                     <?php
                                     if (isset($errors) && isset($_POST['data_lensa']['ffv'])) {
@@ -462,10 +457,6 @@ $user_id = isset($user_id) ? $user_id : null;
                         <p>
                             *Note : 
                             <ul>
-                                <li>Khusus Pilihan <strong>Jenis Lensa (PROGRESSIVE FREE FORM & SINGLE VISION FREE FORM) </strong> <br>
-                                    Maka akan mengaktifkan field WA (Wrap Angle), PT (Pantoscopic Tilt), BVD (Back Vertex Distance), <br>
-                                    FFV (Frame Fit Value), dan V CODE.
-                                </li>
                                 <li>Pada Inputan <strong>MID (Maximum Intermediate Distance)</strong> 
                                     <br> untuk kode lensa ini ( 68539, 68540, 68541, 68542 ) pada Lensa R dan L harus terpenuhi semuanya,
                                     <br>tidak boleh lebih dari value 999, selain kode lensa ini harus isi dimulai ribuan 1001.
@@ -477,11 +468,12 @@ $user_id = isset($user_id) ? $user_id : null;
                 </div>
             </div> <!-- End free-form-section -->
 
+            
             <br>
             <label><strong>MODEL FRAME</strong></label>
             <hr>
             <div class="mb-3">
-                <div id="model-frame-list" class="d-flex flex-wrap gap-3">
+                <div id="model-frame-list" class="d-flex flex-wrap gap-2">
                     <?php
                     $modelList = get_model_frame_backend();
                     if (!empty($modelList)) {
@@ -509,6 +501,7 @@ $user_id = isset($user_id) ? $user_id : null;
                 <input type="hidden" name="data_lensa[model]" id="model_frame_value">
             </div>
             
+
             <br>
             <label><strong>FRAME</strong></label>
             <hr>
@@ -519,9 +512,9 @@ $user_id = isset($user_id) ? $user_id : null;
                     <label class="form-label"><small>*Example: Gosok Tipis Max  </small></label>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">KONDISI FRAME</label>
-                    <input type="text" class="form-control" name="data_lensa[kondisi]" value="<?= isset($errors) && isset($_POST['data_lensa']['kondisi']) ? esc($_POST['data_lensa']['kondisi']) : '' ?>">
-                    <label class="form-label"><small>*Example: Sangat Bagus </small></label>
+                    <label class="form-label">NOTE</label>
+                    <input type="text" class="form-control" name="data_lensa[note]" value="<?= isset($errors) && isset($_POST['data_lensa']['note']) ? esc($_POST['data_lensa']['note']) : '' ?>">
+                    <label class="form-label"><small>*Example: Top Urgent </small></label>
                 </div>
             </div>
 
@@ -574,9 +567,8 @@ $user_id = isset($user_id) ? $user_id : null;
             
             <!-- Frame Measurements Fields -->
             <div class="mb-3 mt-2">
-                <label class="label"><strong>FRAME MEASUREMENTS</strong></label>
-                <hr>
-                <div class="row mt-1 mb-3">
+                <label class="label mb-1"><strong>FRAME MEASUREMENTS</strong></label>
+                <div class="row mb-4">
                     <!-- RIGHT Side -->
                     <div class="col-md-6">
                         <label class="form-label text-primary"><strong>RIGHT</strong></label>
@@ -638,15 +630,9 @@ $user_id = isset($user_id) ? $user_id : null;
                 </div>
             </div>
             
-            <br>
-            <label><strong>DATA JASA</strong></label>
-            <hr>
+            <br><hr>
             <div class="mb-3">
-                <div class="alert alert-info">
-                        <p>
-                            <strong>Jasa bisa lebih dari satu (Wajib jika pilihan hanya jasa YA, Opsional jika hanya jasa di pilih TIDAK )</strong>
-                        </p>
-                    </div>
+                <label class="form-label"><b>Jasa bisa lebih dari satu (Wajib jika pilihan hanya jasa YA, Opsional jika hanya jasa dipilih TIDAK )</b></label>
 
                 <div class="table-responsive" style="max-width:700px;">
                     <table class="table table-bordered align-middle mb-0" id="jasa-input-table">
@@ -676,16 +662,25 @@ $user_id = isset($user_id) ? $user_id : null;
                 <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addJasa()">Tambah Jasa</button>
             </div>
 
+            <!-- <br><hr>
+            <div class="mb-3">
+                <label for="payment_method" class="form-label">Metode Pembayaran</label>
+                <select class="form-select" id="payment_method" name="payment_method">
+                    <option value="manual">Manual</option>
+                    <option value="midtrans">Midtrans</option>
+                    <option value="xendit">Xendit</option>
+                </select>
+            </div> -->
+
             <br><hr>
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <button type="button" class="btn btn-outline-warning me-2" onclick="clearDraft(); location.reload();">
-                        <i class="fas fa-refresh"></i> Clear
-                    </button>
+                    <button type="button" class="btn btn-outline-warning me-2" onclick="clearDraft(); location.reload();">Clear</button>
                 </div>
                 <div>
-                    <button type="submit" class="btn btn-outline-primary"> 
-                        <i class="fas fa-check"></i> Proses Transaksi
+                    <button type="submit" class="btn btn-primary"> Proses Transaksi </button>
+                    <button type="button" class="btn btn-warning ms-2" onclick="debugFormData()">
+                        <i class="fas fa-bug"></i> Debug Form
                     </button>
                 </div>
             </div>
@@ -833,6 +828,7 @@ $user_id = isset($user_id) ? $user_id : null;
 </div>
 
 
+
 <!-- Modal Konfirmasi Submit Transaksi -->
 <div class="modal fade" id="confirmSubmitModal" tabindex="-1" aria-labelledby="confirmSubmitLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -880,6 +876,7 @@ $user_id = isset($user_id) ? $user_id : null;
 
 
 <script>
+
     // Datatables Modal Lensa
     document.addEventListener('DOMContentLoaded', function() {
         let lensaTable;
@@ -1687,6 +1684,7 @@ $user_id = isset($user_id) ? $user_id : null;
 </script>
 
 <script>
+
     // Instance global modal jasa & lensa
     window.jasaModalInstance = null;
     window.lensaModalInstance = null;
@@ -1738,7 +1736,6 @@ $user_id = isset($user_id) ? $user_id : null;
                     midInput.value = 999;
                     midInput.setCustomValidity('Untuk kode lensa khusus (R & L), nilai MID maksimal 999');
                 } else {
-                    midInput.value = 999;
                     midInput.setCustomValidity('');
                 }
             } else {
@@ -1747,7 +1744,6 @@ $user_id = isset($user_id) ? $user_id : null;
                     midInput.value = 1001;
                     midInput.setCustomValidity('Untuk kode lensa lain, nilai MID minimal 1001');
                 } else {
-                    midInput.value = 1001;
                     midInput.setCustomValidity('');
                 }
             }
@@ -1768,69 +1764,27 @@ $user_id = isset($user_id) ? $user_id : null;
         const vcode = document.getElementById('vcode_select');
         const allowed = ['PF', 'SF'];
         let val = jenisLensa.value;
-        
         <?php if (isset($errors) && isset($_POST['data_lensa']['jenis_lensa'])): ?>
             val = "<?= esc($_POST['data_lensa']['jenis_lensa']) ?>";
         <?php endif; ?>
-        
-        
         if (!allowed.includes(val)) {
-            // Set readonly (bukan disabled) agar data tetap bisa disubmit dengan default values
-            wa.value = '5'; 
-            wa.setAttribute('readonly', 'readonly'); 
-            wa.style.backgroundColor = '#e9ecef';
-            wa.style.cursor = 'not-allowed';
-            
-            pt.value = '9'; 
-            pt.setAttribute('readonly', 'readonly'); 
-            pt.style.backgroundColor = '#e9ecef';
-            pt.style.cursor = 'not-allowed';
-            
-            bvd.value = '12'; 
-            bvd.setAttribute('readonly', 'readonly'); 
-            bvd.style.backgroundColor = '#e9ecef';
-            bvd.style.cursor = 'not-allowed';
-            
-            ffv.value = '0'; 
-            ffv.setAttribute('readonly', 'readonly'); 
-            ffv.style.backgroundColor = '#e9ecef';
-            ffv.style.cursor = 'not-allowed';
-            
-            // vcode.value = '0'; 
-            // vcode.setAttribute('readonly', 'readonly'); 
-            // vcode.style.backgroundColor = '#e9ecef';
-            // vcode.style.cursor = 'not-allowed';
-            
+            wa.value = '5'; wa.setAttribute('readonly', 'readonly'); wa.setAttribute('disabled', 'disabled');
+            pt.value = '9'; pt.setAttribute('readonly', 'readonly'); pt.setAttribute('disabled', 'disabled');
+            bvd.value = '12'; bvd.setAttribute('readonly', 'readonly'); bvd.setAttribute('disabled', 'disabled');
+            ffv.value = '0'; ffv.setAttribute('readonly', 'readonly'); ffv.setAttribute('disabled', 'disabled');
+            vcode.value = '0'; vcode.setAttribute('readonly', 'readonly'); vcode.setAttribute('disabled', 'disabled');
         } else {
-            // Remove readonly dan styling jika jenis lensa adalah PF atau SF
-            wa.removeAttribute('readonly'); 
-            wa.style.backgroundColor = '';
-            wa.style.cursor = '';
-            
-            pt.removeAttribute('readonly'); 
-            pt.style.backgroundColor = '';
-            pt.style.cursor = '';
-            
-            bvd.removeAttribute('readonly'); 
-            bvd.style.backgroundColor = '';
-            bvd.style.cursor = '';
-            
-            ffv.removeAttribute('readonly'); 
-            ffv.style.backgroundColor = '';
-            ffv.style.cursor = '';
-            
-            vcode.removeAttribute('readonly'); 
-            vcode.style.backgroundColor = '';
-            vcode.style.cursor = '';
-            
+            wa.removeAttribute('readonly'); wa.removeAttribute('disabled');
+            pt.removeAttribute('readonly'); pt.removeAttribute('disabled');
+            bvd.removeAttribute('readonly'); bvd.removeAttribute('disabled');
+            ffv.removeAttribute('readonly'); ffv.removeAttribute('disabled');
+            vcode.removeAttribute('readonly'); vcode.removeAttribute('disabled');
         }
     }
     document.addEventListener('DOMContentLoaded', function() {
         const jenisLensa = document.getElementById('jenis_lensa');
         if (jenisLensa) {
-            jenisLensa.addEventListener('change', function() {
-                setReadonlyFF();
-            });
+            jenisLensa.addEventListener('change', setReadonlyFF);
             setReadonlyFF();
         }
     });
@@ -1959,6 +1913,7 @@ $user_id = isset($user_id) ? $user_id : null;
         }
     }
 
+
     function clearLensa(kodeId, namaId) {
         // Hapus semua input di baris yang sama (R atau L)
         const row = kodeId.startsWith('r_') ? 'r_' : 'l_';
@@ -2063,10 +2018,6 @@ $user_id = isset($user_id) ? $user_id : null;
         let mbs = 0;
         if (effectifDiameter > 0 && lensSize > 0 && bridgeSize > 0 && totalPdf > 0) {
             mbs = Math.round(effectifDiameter + lensSize + bridgeSize + 2 - totalPdf);
-
-            if(mbs < 0){
-                mbs = 0;
-            }
         }
         
         document.querySelector('[name="data_lensa[mbs_measurement]"]').value = mbs;
@@ -2275,7 +2226,7 @@ $user_id = isset($user_id) ? $user_id : null;
         });
         
         // Reset frame-related fields
-        const frameFields = ['spesial_instruksi', 'kondisi'];
+        const frameFields = ['spesial_instruksi', 'note'];
         frameFields.forEach(function(fieldName) {
             const field = document.querySelector(`[name="data_lensa[${fieldName}]"]`);
             if (field) {
@@ -2843,18 +2794,53 @@ $user_id = isset($user_id) ? $user_id : null;
     });
 </script>
 
+
 <script>  
+    // SIMPLIFIED: handleSimpleSubmit hanya untuk konfirmasi
+    function handleSimpleSubmit(event) {
+        console.log('🔧 handleSimpleSubmit called...');
+        
+        // Cek konfirmasi (logic konfirmasi tetap sama)
+        if (!isConfirmedSubmit) {
+            event.preventDefault();
+            console.log('⚠️ Not confirmed yet - preventing submit');
+            const confirmSubmitModal = new bootstrap.Modal(document.getElementById('confirmSubmitModal'));
+            confirmSubmitModal.show();
+            return false;
+        }
+        
+        // Reset flag setelah submit berhasil
+        isConfirmedSubmit = false;
+        console.log('✅ Submit confirmed - proceeding with form submission');
+        
+        // Log final data yang akan dikirim
+        const formData = new FormData(document.getElementById('mainForm'));
+        console.log('� Final data being submitted:');
+        const selectFields = ['r_spheris', 'r_cylinder', 'r_axis', 'r_add', 'r_prisma', 'r_base', 
+                              'l_spheris', 'l_cylinder', 'l_axis', 'l_add', 'l_prisma', 'l_base'];
+        selectFields.forEach(field => {
+            const value = formData.get(`data_lensa[${field}]`) || '';
+            console.log(`data_lensa[${field}] = "${value}"`);
+        });
+        
+        // Lanjutkan submit (return true)
+        return true;
+    }
+
     // === MODAL KONFIRMASI SUBMIT TRANSAKSI ===
     /* Action Form Submit */
     $("#formTambah").unbind('submit').on('submit', function() {
         // dialog_submit('Notification',"Simpan !!");
         const confirmSubmitModal = new bootstrap.Modal(document.getElementById('confirmSubmitModal'));
         confirmSubmitModal.show();
+
         $('#btn-submit').click(function() {
             document.getElementById('formTambah').submit();
         });
+
         return false;
     });
+    
 </script>
 
 <?= $this->endSection() ?>

@@ -14,6 +14,7 @@
                 </div>
             <?php endif; ?>
             <form method="post" action="<?= (isset($permission) && isset($permission['id'])) ? base_url('backend/permission/edit/'.$permission['id']) : base_url('backend/permission/create') ?>">
+                <?= csrf_field() ?>
                 <div class="mb-3">
                     <label for="name" class="form-label">Nama Permission</label>
                     <input type="text" class="form-control" id="name" name="name" value="<?= esc($permission['name'] ?? '') ?>" required>

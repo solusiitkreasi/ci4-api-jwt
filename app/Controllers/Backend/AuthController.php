@@ -60,6 +60,8 @@ class AuthController extends BaseController
         // Set session data
         $sessionData = [
             'user_id'       => $user['id'],
+            'kode_group'    => $user['kode_group'],
+            'kode_customer' => $user['kode_customer'],
             'name'          => $user['name'],
             'email'         => $user['email'],
             'role_id'       => $roleIds, // array semua role id
@@ -396,6 +398,71 @@ class AuthController extends BaseController
         $db  = \Config\Database::connect('db_tol');
         $customers = $db->query("SELECT * FROM db_tol.mst_customer WHERE group_customer = ?", [$group])->getResult();
         return $this->response->setJSON($customers);
+    }
+
+    /**
+     * Check session status untuk AJAX request
+     */
+    public function checkSession()
+    {
+        $session = session();
+        
+        if (!$session->get('is_logged_in')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'authenticated' => false,
+                'message' => 'Session expired'
+            ]);
+        }
+
+        // Hitung waktu tersisa session
+        $lastActivity = $session->get('last_activity') ?? time();
+        $sessionLifetime = config('Session')->expiration ?: 7200; // Default 2 hours
+        $currentTime = time();
+        $timeLeft = $sessionLifetime - ($currentTime - $lastActivity);
+
+        if ($timeLeft <= 0) {
+            // Session expired
+            $session->destroy();
+            return $this->response->setJSON([
+                'success' => false,
+                'authenticated' => false,
+                'message' => 'Session expired'
+            ]);
+        }
+
+        // Update last activity
+        $session->set('last_activity', $currentTime);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'authenticated' => true,
+            'time_left' => $timeLeft,
+            'message' => 'Session active'
+        ]);
+    }
+
+    /**
+     * Extend session untuk user yang masih aktif
+     */
+    public function extendSession()
+    {
+        $session = session();
+        
+        if (!$session->get('is_logged_in')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Not authenticated'
+            ]);
+        }
+
+        // Update last activity untuk memperpanjang session
+        $session->set('last_activity', time());
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Session extended successfully'
+        ]);
     }
 
 }

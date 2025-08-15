@@ -14,6 +14,7 @@
                 </div>
             <?php endif; ?>
             <form method="post" action="<?= (isset($role) && isset($role['id'])) ? base_url('backend/role/edit/'.$role['id']) : base_url('backend/role/create') ?>">
+                <?= csrf_field() ?>
                 <div class="mb-3">
                     <label for="name" class="form-label">Nama Role</label>
                     <input type="text" class="form-control" id="name" name="name" value="<?= esc($role['name'] ?? '') ?>" required>

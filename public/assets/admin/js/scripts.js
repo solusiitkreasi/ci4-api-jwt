@@ -37,7 +37,7 @@ class Scripts {
   // Base scripts initialization
   _initBase() {
     // Navigation
-    if (typeof Nav !== "undefined") {
+    if (typeof Nav !== "undefined" && document.getElementById("nav")) {
       const nav = new Nav(document.getElementById("nav"));
     }
 

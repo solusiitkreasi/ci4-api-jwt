@@ -1,9 +1,9 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-placement="vertical" data-behaviour="unpinned">
 <head>
     
-    <title>TOL API | <?= esc($title ?? 'Dashboard') ?></title>
+    <title>TOL | <?= esc($title ?? 'Dashboard') ?></title>
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
@@ -12,7 +12,7 @@
     <!-- Favicon Tags Start -->
     <link rel="shortcut icon" href="https://place-hold.it/100x100/00362b/fff/fff?text=TOL&fontsize=35&bold" type="image/x-icon" >
     <link rel="icon" type="image/png" href="https://place-hold.it/128x128/00362b/fff/fff?text=TOL&fontsize=35&bold" sizes="128x128" />
-    <meta name="application-name" content="TOL API" />
+    <meta name="application-name" content="TOL" />
     <meta name="msapplication-TileColor" content="#FFFFFF" />
     <!-- Favicon Tags End -->
 
@@ -46,12 +46,12 @@
             <div class="container">
                 <?= $this->renderSection('content') ?>
             </div>
-	    
+        
             <?= $this->include('backend/layouts/partials/_footer') ?>
 
         </main>
 
-	</div>
+    </div>
 
     <?= $this->include('backend/layouts/partials/_scripts') ?>
 

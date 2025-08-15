@@ -2,7 +2,32 @@
 
 <?= $this->section('content') ?>
 
-    <h1 class="h3 mb-3"><?= esc($title) ?></h1>
+<div class="row">
+	<div class="col">
+
+    
+    <!-- Title and Top Buttons Start -->
+	<div class="page-title-container">
+		<div class="row">
+			<!-- Title Start -->
+			<div class="col-12 col-md-7">
+				<h1 class="mb-0 pb-0 display-4" id="title"><?= esc($title) ?></h1>
+			</div>
+			<!-- Title End -->
+
+			<!-- Top Buttons Start -->
+			<div class="col-12 col-md-5 d-flex align-items-start justify-content-end">
+				<!-- Add New Button Start -->
+				<a href="<?= base_url('backend/transaksi/create') ?>" class="btn btn-outline-primary btn-icon btn-icon-start w-100 w-md-auto add-datatable">
+					<i data-acorn-icon="plus"></i>
+					<span>New Transaksi</span>
+				</a>
+				<!-- Add New Button End -->
+			</div>
+			<!-- Top Buttons End -->
+		</div>
+	</div>
+	<!-- Title and Top Buttons End -->
 
     <div class="card">
         <div class="card-body">
@@ -74,9 +99,10 @@
             </div>
 
             <div class="row mb-3">
-                <div class="col-md-12 mb-2">
+                <div class="col-md-2 mb-2">
                     <button id="btn-export-csv" class="btn btn-success">Export CSV</button>
                 </div>
+                
             </div>
 
             <table id="transaksi-table" class="table table-striped" style="width:100%">
@@ -95,6 +121,9 @@
             </table>
         </div>
     </div>
+    
+	</div>
+</div>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"/>
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>

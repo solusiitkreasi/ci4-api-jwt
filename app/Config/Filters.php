@@ -75,7 +75,7 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             'dbCheck',
-            // 'csrf', // Nonaktifkan CSRF di globals juga untuk development
+            // 'csrf', // Aktifkan CSRF global
             // 'honeypot',
             // 'invalidchars',
         ],

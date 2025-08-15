@@ -201,6 +201,9 @@ $routes->post('/register', 'Backend\AuthController::registerAction');
 $routes->get('/activate', 'Backend\AuthController::activateAccount');
 $routes->post('/register/get-customer-by-group', 'Backend\AuthController::getCustomerByGroup');
 
+// Session management routes (untuk AJAX calls)
+$routes->get('backend/auth/check-session', 'Backend\AuthController::checkSession');
+$routes->post('backend/auth/extend-session', 'Backend\AuthController::extendSession');
 
 // Grup untuk semua halaman admin yang terproteksi
 $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' => 'adminAuth'], function ($routes) {
@@ -222,6 +225,17 @@ $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' =>
         $routes->get('export_excel', 'TransaksiController::exportExcel');
         $routes->get('create', 'TransaksiController::create');
         $routes->post('create', 'TransaksiController::create');
+        
+        $routes->get('datalensa', 'LensaController::datatables');
+        $routes->get('getspheris', 'LensaController::getspheris');
+        $routes->get('getcylinder', 'LensaController::getcylinder');
+        $routes->get('getaxis', 'LensaController::getaxis');
+        $routes->get('getadditional', 'LensaController::getadditional');
+        $routes->get('getbase', 'LensaController::getbase');
+        $routes->get('getprisma', 'LensaController::getprisma');
+
+        // $routes->get('getwa', 'LensaController::getwa');
+
     });
     
 
@@ -272,8 +286,10 @@ $routes->group('backend', ['namespace' => 'App\Controllers\Backend', 'filter' =>
         $routes->get('delete/(:num)', 'UserController::delete/$1');
 
     });
-    
 
+    
+    
+    $routes->group('log-activity', 'Backend\LogActivityController::index');
 });
 
 // =================================================================
